@@ -462,11 +462,13 @@ export const adminSendBroadcast = createServerFn({ method: "POST" })
         photo?: string;
         buttons?: { text: string; url: string }[];
         target?: "users" | "community" | "both";
+        offset?: number;
       }
     ) => d
   )
   .handler(async ({ data }) => {
     await adminSession(data.initData, data.password);
+    const offset = Math.max(0, Math.min(10_000_000, Math.floor(Number(data.offset) || 0)));
     return adminBroadcast(String(data.text ?? "").slice(0, 4000), {
       target: data.target === "community" || data.target === "both" ? data.target : "users",
       photo: String(data.photo ?? "").slice(0, 500),
@@ -474,7 +476,7 @@ export const adminSendBroadcast = createServerFn({ method: "POST" })
         text: String(b.text ?? "").slice(0, 40),
         url: String(b.url ?? "").slice(0, 300),
       })),
-    });
+    }, offset);
   });
 
 export const adminFindUsers = createServerFn({ method: "POST" })
