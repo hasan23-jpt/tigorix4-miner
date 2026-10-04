@@ -154,6 +154,6 @@ export async function showAd(
 }
 
 export function adErrorMessage(r: AdResult) {
-  if (r.reason === "short") return "⏱ Watch the full ad to get the reward.";
+  if (r.reason === "short") return "⏱ Ad closed too soon — watch at least 15 seconds to get the reward.";
   return "📺 No ad available right now — please try again in a moment.";
 }

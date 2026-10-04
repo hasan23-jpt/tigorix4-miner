@@ -137,7 +137,9 @@ function AdsView() {
   const watch = (card: NetworkCard) => {
     setPlaying(card.net);
     void (async () => {
-      const r = await showAd(card.net, card.blockId, MIN_WATCH_MS);
+      // Adsgram interstitial must be watched at least 15s before any reward.
+      const minMs = card.net === "int" ? 15000 : MIN_WATCH_MS;
+      const r = await showAd(card.net, card.blockId, minMs);
       setPlaying(null);
       if (!r.ok) {
         const { toast } = await import("sonner");
@@ -146,7 +148,7 @@ function AdsView() {
       }
       await run(
         () => doRecordAd({ data: { initData: auth, network: card.net } }),
-        (res) => `✅ View counted! +${res?.reward ?? 0} ${APP.tokenName}`
+        (res) => `🎉 Reward added! +${res?.reward ?? 0} ${APP.tokenName}`
       );
     })();
   };
@@ -279,7 +281,9 @@ function AdBlockCard({
         </GoldButton>
       )}
       <p className="mt-3 text-center text-[11px] text-muted-foreground">
-        Optional bonus · watch the full ad to earn.
+        {network.includes("Interstitial")
+          ? "⏱ Watch at least 15 seconds to earn the reward."
+          : "Optional bonus · watch the full ad to earn."}
       </p>
     </Card>
   );
