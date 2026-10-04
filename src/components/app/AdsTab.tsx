@@ -281,7 +281,9 @@ function AdBlockCard({
         </GoldButton>
       )}
       <p className="mt-3 text-center text-[11px] text-muted-foreground">
-        Optional bonus · watch the full ad to earn.
+        {network.includes("Interstitial")
+          ? "⏱ Watch at least 15 seconds to earn the reward."
+          : "Optional bonus · watch the full ad to earn."}
       </p>
     </Card>
   );
