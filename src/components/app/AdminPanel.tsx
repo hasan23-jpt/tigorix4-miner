@@ -104,17 +104,14 @@ staleTime: 30000,
             />
           </div>
           <Card>
-            <SectionTitle icon="🏦" title="Top balances" />
-            <div className="overflow-hidden rounded-xl border border-border">
+            <SectionTitle icon="🏦" title="Top balances" action={<Pill>{data.topBalances.length}</Pill>} />
+            <div className="max-h-[480px] overflow-y-auto rounded-xl border border-border">
               <div className="grid grid-cols-[1fr_auto_auto] gap-2 bg-muted/50 px-3 py-2 text-[10px] font-extrabold uppercase text-muted-foreground">
                 <span>User</span>
                 <span className="text-right">{APP.tokenName}</span>
                 <span className="w-16 text-right">USD</span>
               </div>
-              {[...data.users]
-                .sort((a, b) => b.balance - a.balance)
-                .slice(0, 15)
-                .map((u) => (
+              {data.topBalances.map((u, i) => (
                   <div
                     key={u.id}
                     className="grid grid-cols-[1fr_auto_auto] items-center gap-2 border-t border-border px-3 py-2 text-xs"
@@ -193,6 +190,21 @@ function BroadcastForm({ admin }: { admin: AdminAuth }) {
   const [photo, setPhoto] = useState("");
   const [btns, setBtns] = useState("");
   const [target, setTarget] = useState<"users" | "community" | "both">("users");
+  const [progress, setProgress] = useState<{ done: number; total: number; sent: number; failed: number } | null>(null);
+  const sendAll = async () => {
+    let offset: number | null = 0;
+    let sent = 0;
+    let failed = 0;
+    setProgress({ done: 0, total: 0, sent: 0, failed: 0 });
+    while (offset !== null) {
+      const r = await adminSendBroadcast({ data: { ...admin, text, photo: photo.trim(), buttons, target, offset } });
+      sent += r.sent;
+      failed += r.failed;
+      setProgress({ done: r.done, total: r.total, sent, failed });
+      offset = r.next;
+    }
+    return { sent, failed };
+  };
   const buttons = btns
     .split("\n")
     .map((l) => l.split("|").map((x) => x.trim()))
@@ -243,8 +255,8 @@ function BroadcastForm({ admin }: { admin: AdminAuth }) {
         disabled={busy || !text.trim()}
         onClick={() =>
           void run(
-            () => adminSendBroadcast({ data: { ...admin, text, photo: photo.trim(), buttons, target } }),
-            (r) => `📢 Sent (${r?.sent ?? 0})`
+            () => sendAll(),
+            (r) => `📢 Delivered to ${r?.sent ?? 0}${r?.failed ? ` · ${r.failed} blocked the bot` : ""}`
           ).then(() => {
             setText("");
             setPhoto("");
@@ -252,8 +264,22 @@ function BroadcastForm({ admin }: { admin: AdminAuth }) {
           })
         }
       >
-        📢 Send Broadcast
+        {busy && progress ? `📤 Sending… ${progress.done}/${progress.total || "…"}` : "📢 Send Broadcast"}
       </GoldButton>
+      {progress && (
+        <div className="space-y-1">
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className="bg-gold-gradient h-full transition-all"
+              style={{ width: `${progress.total ? Math.round((progress.done / progress.total) * 100) : 0}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            ✅ {progress.sent} delivered · ⛔ {progress.failed} failed · {progress.done}/{progress.total} users
+            {busy ? " — keep this screen open until it finishes" : ""}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
