@@ -11,6 +11,7 @@ import {
 import { useAppState } from "./useApp";
 import { useAdGate } from "./useAdGate";
 import { PayoutProofsCard } from "./PayoutProofs";
+import { QuickTasks } from "./QuickTasks";
 import { Card, Field, GhostButton, GoldButton, Guide, Pill, SectionTitle } from "./ui";
 
 function countdown(ms: number) {
@@ -162,6 +163,8 @@ export function HomeTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
         <QuickAction icon={<Users className="size-5" />} label="Refer" onClick={() => onNavigate("refer")} />
         <QuickAction icon={<Wallet className="size-5" />} label="Withdraw" onClick={() => onNavigate("profile")} />
       </div>
+
+      <QuickTasks onSeeAll={() => onNavigate("tasks")} />
 
       <Card>
         <SectionTitle icon="🎫" title="Reward Code" />

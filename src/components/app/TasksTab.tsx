@@ -158,7 +158,7 @@ function DailyTasks({
   );
 }
 
-type Task = {
+export type Task = {
   id: string;
   kind: "channel" | "app";
   title: string;
@@ -227,7 +227,7 @@ function TaskGroup({
   );
 }
 
-function TaskRow({
+export function TaskRow({
   n,
   t,
   claimed,

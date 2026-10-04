@@ -5,6 +5,7 @@ import {
   setDoc,
   deleteDoc,
   queryDocs,
+  allDocs,
   createDoc,
   incrField,
   ledgerCredit,
@@ -443,7 +444,7 @@ export async function claimMining(user: UserDoc, cfg: Cfg) {
 export async function notifyFinishedMining() {
   const cfg = await getCfg();
   const duration = Math.max(1, cfg.miningHours) * 3600 * 1000;
-  const users = await queryDocs<UserDoc>("users", { limit: 1000 });
+  const users = await allDocs<UserDoc>("users");
   let notified = 0;
   for (const u of users) {
     if (u.suspended || u.notifications === false) continue;
@@ -1212,7 +1213,7 @@ function maskWallet(w: string) {
 }
 
 export async function leaderboard(kind: "earn" | "refer" = "earn") {
-  const all = (await queryDocs<UserDoc>("users", { limit: 5000 })).filter((u) => !u.suspended);
+  const all = (await allDocs<UserDoc>("users")).filter((u) => !u.suspended);
   const key = (u: UserDoc) => (kind === "refer" ? (u.refActive ?? 0) * 1e6 + (u.refCount ?? 0) : u.totalEarned ?? 0);
   const users = all.sort((a, b) => key(b) - key(a)).slice(0, 50);
   return users.map((u, i) => ({
@@ -1229,7 +1230,7 @@ export async function leaderboard(kind: "earn" | "refer" = "earn") {
 
 export async function adminOverview() {
   const [users, withdrawals, tasks, codes, sites] = await Promise.all([
-    queryDocs<UserDoc>("users", { limit: 1000 }),
+    allDocs<UserDoc>("users"),
     queryDocs<WithdrawRow>("withdrawals", { limit: 300 }),
     listTasks(),
     queryDocs<{ reward: number; uses: number; maxUses: number; active: boolean }>("codes", {
@@ -1283,6 +1284,15 @@ export async function adminOverview() {
           };
         })
     ),
+    topBalances: [...users]
+      .sort((a, b) => (b.balance ?? 0) - (a.balance ?? 0))
+      .slice(0, 100)
+      .map((u) => ({
+        id: u.id,
+        name: label(u),
+        balance: u.balance ?? 0,
+        suspended: !!u.suspended,
+      })),
     suspendedUsers: users
       .filter((u) => u.suspended)
       .sort((a, b) => (b.lastSeen ?? 0) - (a.lastSeen ?? 0))
@@ -1448,34 +1458,46 @@ export async function adminDeleteCode(code: string) {
   return { ok: true };
 }
 
+const BROADCAST_CHUNK = 100;
+
+/**
+ * Sends one chunk of a broadcast (users[offset .. offset+100]). The admin panel
+ * calls this repeatedly with the returned `next` until it is null, so a large
+ * user base never hits the server time limit. 25 messages per second keeps us
+ * under Telegram's 30/sec bot limit.
+ */
 export async function adminBroadcast(
   text: string,
-  opts: { photo?: string; buttons?: { text: string; url: string }[]; target?: "users" | "community" | "both" } = {}
+  opts: { photo?: string; buttons?: { text: string; url: string }[]; target?: "users" | "community" | "both" } = {},
+  offset = 0
 ) {
   const target = opts.target ?? "users";
-  const users = target === "community" ? [] : await queryDocs<UserDoc>("users", { limit: 5000 });
   const keyboard: { text: string; url: string }[][] = [];
   const extra = (opts.buttons ?? []).filter((b) => b.text && b.url);
   for (let i = 0; i < extra.length; i += 2) keyboard.push(extra.slice(i, i + 2));
   keyboard.push([btn.miniApp], [btn.community, btn.payment]);
   const photo = (opts.photo ?? "").trim();
+  const send = (chat: string | number) =>
+    photo ? sendPhoto(chat, photo, text, keyboard) : sendMessage(chat, text, keyboard);
   let sent = 0;
-  if (target !== "users") {
-    const body = text;
-    const r = photo
-      ? await sendPhoto(APP.communityChatId, photo, body, keyboard)
-      : await sendMessage(APP.communityChatId, body, keyboard);
-    if (r) sent++;
+  let failed = 0;
+  if (target !== "users" && offset === 0) {
+    if (await send(APP.communityChatId)) sent++;
+    else failed++;
   }
-  for (const u of users) {
-    if (u.notifications === false) continue;
-    const body = text;
-    const r = photo
-      ? await sendPhoto(u.id, photo, body, keyboard)
-      : await sendMessage(u.id, body, keyboard);
-    if (r) sent++;
+  if (target === "community") return { sent, failed, total: 0, done: 0, next: null as number | null };
+  const all = (await allDocs<UserDoc>("users")).filter((u) => u.notifications !== false && !u.suspended);
+  const start = Math.max(0, Math.floor(offset));
+  const slice = all.slice(start, start + BROADCAST_CHUNK);
+  for (let i = 0; i < slice.length; i += 25) {
+    const t0 = Date.now();
+    const res = await Promise.all(slice.slice(i, i + 25).map((u) => send(u.id).catch(() => null)));
+    for (const r of res) r ? sent++ : failed++;
+    const wait = 1000 - (Date.now() - t0);
+    if (i + 25 < slice.length && wait > 0) await new Promise((r) => setTimeout(r, wait));
   }
-  return { sent };
+  const done = start + slice.length;
+  return { sent, failed, total: all.length, done, next: done < all.length ? done : null };
 }
 
 /* --------------------------- user audit / search ------------------------- */
@@ -1507,7 +1529,7 @@ export async function adminFixBalance(userId: string) {
 
 export async function adminSearchUsers(query: string) {
   const q = String(query ?? "").trim().toLowerCase().replace(/^@/, "");
-  const users = await queryDocs<UserDoc>("users", { limit: 5000 });
+  const users = await allDocs<UserDoc>("users");
   const matches = (q ? users.filter(
     (u) =>
       u.id.includes(q) ||

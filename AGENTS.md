@@ -14,3 +14,5 @@
 - All balance changes go through the `ledger_credit` SQL function (balance + transaction in one atomic step) — makes the ledger audit exact and blocks negative balances.
 - Every reward/withdraw server function runs through `act()` (per-user lock + fresh reload + ledger audit) and one-time claims use `createDoc` atomic inserts — prevents parallel double-claims.
 - Schema changes are shipped as `supabase/schema.sql` for the user to paste into their SQL editor — the project is not linked to Lovable's Supabase connector.
+- Collection reads page through the database 1000 rows at a time (`queryDocs`/`allDocs` in fsdb.server.ts) — the database caps each request at 1000 rows.
+- Broadcasts are sent in 100-user chunks driven by the admin panel (`offset` → `next`) — keeps each server call short and under Telegram's 30 msg/sec limit.
