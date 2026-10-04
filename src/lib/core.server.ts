@@ -1145,7 +1145,11 @@ export async function requestWithdraw(user: UserDoc, cfg: Cfg, tokens: number) {
 export async function listTransactions(user: UserDoc) {
   const tx = await queryDocs<{ type: string; amount: number; note: string; at: number }>(
     "transactions",
-    { where: [{ field: "userId", op: "EQUAL", value: user.id }], limit: 300 }
+    {
+      where: [{ field: "userId", op: "EQUAL", value: user.id }],
+      orderBy: { field: "at", dir: "DESCENDING" },
+      limit: 300,
+    }
   );
   return tx.sort((a, b) => (b.at ?? 0) - (a.at ?? 0)).slice(0, 100);
 }
