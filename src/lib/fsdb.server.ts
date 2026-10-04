@@ -98,15 +98,31 @@ export async function queryDocs<T = Any>(
       `order=data->${opts.orderBy.field}.${opts.orderBy.dir === "ASCENDING" ? "asc" : "desc"}.nullslast`
     );
   }
-  params.push(`limit=${Math.min(Math.max(1, opts.limit ?? 1000), 5000)}`);
-  const res = await rest(`/docs?${params.join("&")}`);
-  if (!res.ok) throw new Error(`Database query failed [${res.status}]: ${await res.text()}`);
-  const rows = (await res.json()) as { id: string; data: T }[];
-  return rows.map((r) => ({ ...(r.data as T), id: r.id }));
+  // Stable tiebreaker so paging never skips or repeats rows.
+  if (!opts.orderBy) params.push("order=id.asc");
+  else params[params.length - 1] += ",id.asc";
+  // The database returns at most 1000 rows per request, so read in pages.
+  const want = Math.min(Math.max(1, opts.limit ?? 1000), 200_000);
+  const PAGE = 1000;
+  const out: (T & { id: string })[] = [];
+  for (let offset = 0; offset < want; offset += PAGE) {
+    const take = Math.min(PAGE, want - offset);
+    const res = await rest(`/docs?${params.join("&")}&limit=${take}&offset=${offset}`);
+    if (!res.ok) throw new Error(`Database query failed [${res.status}]: ${await res.text()}`);
+    const rows = (await res.json()) as { id: string; data: T }[];
+    for (const r of rows) out.push({ ...(r.data as T), id: r.id });
+    if (rows.length < take) break;
+  }
+  return out;
+}
+
+/** Every document in a collection (paged, no 1000-row cap). */
+export function allDocs<T = Any>(collection: string, opts: Omit<QueryOpts, "limit"> = {}) {
+  return queryDocs<T>(collection, { ...opts, limit: 200_000 });
 }
 
 export async function countDocs(collection: string, opts: QueryOpts = {}) {
-  const rows = await queryDocs(collection, { ...opts, limit: opts.limit ?? 5000 });
+  const rows = await queryDocs(collection, { ...opts, limit: opts.limit ?? 200_000 });
   return rows.length;
 }
 
