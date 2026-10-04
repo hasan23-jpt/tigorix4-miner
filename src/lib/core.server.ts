@@ -443,7 +443,7 @@ export async function claimMining(user: UserDoc, cfg: Cfg) {
 export async function notifyFinishedMining() {
   const cfg = await getCfg();
   const duration = Math.max(1, cfg.miningHours) * 3600 * 1000;
-  const users = await queryDocs<UserDoc>("users", { limit: 1000 });
+  const users = await allDocs<UserDoc>("users");
   let notified = 0;
   for (const u of users) {
     if (u.suspended || u.notifications === false) continue;
@@ -1212,7 +1212,7 @@ function maskWallet(w: string) {
 }
 
 export async function leaderboard(kind: "earn" | "refer" = "earn") {
-  const all = (await queryDocs<UserDoc>("users", { limit: 5000 })).filter((u) => !u.suspended);
+  const all = (await allDocs<UserDoc>("users")).filter((u) => !u.suspended);
   const key = (u: UserDoc) => (kind === "refer" ? (u.refActive ?? 0) * 1e6 + (u.refCount ?? 0) : u.totalEarned ?? 0);
   const users = all.sort((a, b) => key(b) - key(a)).slice(0, 50);
   return users.map((u, i) => ({
@@ -1229,7 +1229,7 @@ export async function leaderboard(kind: "earn" | "refer" = "earn") {
 
 export async function adminOverview() {
   const [users, withdrawals, tasks, codes, sites] = await Promise.all([
-    queryDocs<UserDoc>("users", { limit: 1000 }),
+    allDocs<UserDoc>("users"),
     queryDocs<WithdrawRow>("withdrawals", { limit: 300 }),
     listTasks(),
     queryDocs<{ reward: number; uses: number; maxUses: number; active: boolean }>("codes", {
@@ -1453,7 +1453,7 @@ export async function adminBroadcast(
   opts: { photo?: string; buttons?: { text: string; url: string }[]; target?: "users" | "community" | "both" } = {}
 ) {
   const target = opts.target ?? "users";
-  const users = target === "community" ? [] : await queryDocs<UserDoc>("users", { limit: 5000 });
+  const users = target === "community" ? [] : await allDocs<UserDoc>("users");
   const keyboard: { text: string; url: string }[][] = [];
   const extra = (opts.buttons ?? []).filter((b) => b.text && b.url);
   for (let i = 0; i < extra.length; i += 2) keyboard.push(extra.slice(i, i + 2));
@@ -1507,7 +1507,7 @@ export async function adminFixBalance(userId: string) {
 
 export async function adminSearchUsers(query: string) {
   const q = String(query ?? "").trim().toLowerCase().replace(/^@/, "");
-  const users = await queryDocs<UserDoc>("users", { limit: 5000 });
+  const users = await allDocs<UserDoc>("users");
   const matches = (q ? users.filter(
     (u) =>
       u.id.includes(q) ||
