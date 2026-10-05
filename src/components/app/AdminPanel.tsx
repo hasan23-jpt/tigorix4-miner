@@ -1441,6 +1441,7 @@ const FEATURES = [
   { key: "withdrawUserNotify", label: "🧾 Withdrawal request message", hint: "Bot confirms each withdrawal request to the user (wallet masked)." },
   { key: "tutorialEnabled", label: "🎓 First-run tutorial", hint: "Shows the welcome guide once to new users." },
   { key: "farmScene", label: "🌾 Animated farm background", hint: "Tiger farmer, fields and falling coins behind the app." },
+  { key: "tapRules", label: "👆 Ad tap rules", hint: "Adsgram reward 25–100% by taps, Monetag/Gigapub need 1 tap, quick-closed interstitial 50%." },
   { key: "adRotation", label: "🔄 Ad card rotation", hint: "A watched network moves to the back of the list." },
 ] as const;
 

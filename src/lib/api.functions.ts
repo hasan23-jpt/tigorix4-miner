@@ -75,7 +75,7 @@ const CFG_TYPES: Record<string, "number" | "boolean" | "string"> = {
   minWithdrawFirst: "number", minWithdrawNext: "number", feeFlatUsd: "number",
   feePercent: "number", adminPassword: "string", maintenance: "boolean",
   withdrawEnabled: "boolean", remindersEnabled: "boolean", withdrawUserNotify: "boolean",
-  tutorialEnabled: "boolean", farmScene: "boolean", adRotation: "boolean", minAdGapSec: "number", maintenanceText: "string",
+  tutorialEnabled: "boolean", farmScene: "boolean", adRotation: "boolean", tapRules: "boolean", minAdGapSec: "number", maintenanceText: "string",
 };
 
 function cleanCfgPatch(patch: Record<string, unknown>) {
@@ -155,6 +155,7 @@ export const bootstrap = createServerFn({ method: "POST" })
         tutorialEnabled: cfg.tutorialEnabled !== false,
         farmScene: cfg.farmScene !== false,
         adRotation: cfg.adRotation !== false,
+        tapRules: cfg.tapRules !== false,
       },
       user: publicUser(user),
       mining: miningState(user, cfg),
@@ -279,8 +280,18 @@ export const doClaimDailyTask = createServerFn({ method: "POST" })
   .handler(async ({ data }) => act(data.initData, ({ user, cfg }) => claimDailyTask(user, cfg, str(data.key, 20))));
 
 export const doRecordAd = createServerFn({ method: "POST" })
-  .inputValidator((d: Auth & { network: AdNetwork }) => d)
-  .handler(async ({ data }) => act(data.initData, ({ user, cfg }) => recordAdView(user, cfg, (["int", "reward", "giga", "monetag", "tower"] as AdNetwork[]).includes(data.network) ? data.network : "int")));
+  .inputValidator((d: Auth & { network: AdNetwork; taps?: number; watchedMs?: number }) => d)
+  .handler(async ({ data }) =>
+    act(data.initData, ({ user, cfg }) =>
+      recordAdView(
+        user,
+        cfg,
+        (["int", "reward", "giga", "monetag", "tower"] as AdNetwork[]).includes(data.network) ? data.network : "int",
+        Math.max(0, Math.min(3, Math.floor(Number(data.taps) || 0))),
+        Math.max(0, Math.min(600000, Number(data.watchedMs) || 0))
+      )
+    )
+  );
 
 export const getReferrals = createServerFn({ method: "POST" })
   .inputValidator((d: Auth) => d)
