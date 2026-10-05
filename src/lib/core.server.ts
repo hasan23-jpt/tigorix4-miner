@@ -61,6 +61,7 @@ export type Cfg = {
   tutorialEnabled: boolean;
   farmScene: boolean;
   adRotation: boolean;
+  tapRules: boolean;
   minAdGapSec: number;
   maintenanceText: string;
 };
@@ -112,6 +113,7 @@ const DEFAULT_CFG: Cfg = {
   tutorialEnabled: true,
   farmScene: true,
   adRotation: true,
+  tapRules: true,
   minAdGapSec: 8,
   maintenanceText: "",
 };
@@ -783,13 +785,37 @@ function netCount(user: UserDoc, net: AdNetwork) {
  * Rewarded ad view from an ad network block. Each network has its own daily
  * cap and reward. A view also advances the viewer's own referral milestones.
  */
-export async function recordAdView(user: UserDoc, cfg: Cfg, network: AdNetwork) {
+/**
+ * Tap-based reward share. Adsgram rewarded: 25/50/75/100% for 0/1/2/3 taps.
+ * Adsgram interstitial closed within 5s: 50%, or 100% with a tap.
+ * Monetag / Gigapub: at least one tap required. Others: full reward.
+ */
+export function tapShare(network: AdNetwork, taps: number, watchedMs: number, on: boolean) {
+  if (!on) return 1;
+  const t = Math.max(0, Math.min(3, Math.floor(Number(taps) || 0)));
+  if (network === "reward") return [0.25, 0.5, 0.75, 1][t]!;
+  if (network === "int") return watchedMs > 0 && watchedMs < 5000 && t === 0 ? 0.5 : 1;
+  if (network === "monetag" || network === "giga") {
+    if (t < 1) throw new Error("👆 Tap the ad at least once to get this reward.");
+    return 1;
+  }
+  return 1;
+}
+
+export async function recordAdView(
+  user: UserDoc,
+  cfg: Cfg,
+  network: AdNetwork,
+  taps = 0,
+  watchedMs = 0
+) {
   assertActive(user);
   const meta = AD_NETWORKS[network];
   if (!meta) throw new Error("Unknown ad network");
   const today = utcDayKey();
   const cap = Math.max(0, Number(cfg[meta.cap] ?? 0));
-  const reward = Math.max(0, Number(cfg[meta.reward] ?? 0));
+  const share = tapShare(network, taps, watchedMs, cfg.tapRules !== false);
+  const reward = Math.round(Math.max(0, Number(cfg[meta.reward] ?? 0)) * share);
   const seenToday = netCount(user, network);
   const gap = Math.max(0, Number(cfg.minAdGapSec ?? 8)) * 1000;
   if (gap && Date.now() - Number(user.lastAdAt ?? 0) < gap)
@@ -827,6 +853,8 @@ export async function recordAdView(user: UserDoc, cfg: Cfg, network: AdNetwork) 
     totalToday: user.adsToday,
     adsTotal: user.adsTotal,
     reward,
+    taps: Math.max(0, Math.min(3, Math.floor(Number(taps) || 0))),
+    share,
     balance: user.balance,
   };
 }

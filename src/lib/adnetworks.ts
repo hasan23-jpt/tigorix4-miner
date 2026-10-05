@@ -13,7 +13,12 @@ export const MIN_WATCH_MS = 0;
 
 export type AdNet = "int" | "reward" | "giga" | "monetag" | "tower";
 
-export type AdResult = { ok: boolean; reason?: "nofill" | "short" | "skip" };
+export type AdResult = {
+  ok: boolean;
+  reason?: "nofill" | "short" | "skip";
+  taps?: number;
+  watchedMs?: number;
+};
 
 type Win = Record<string, unknown>;
 
@@ -199,13 +204,14 @@ export async function showAd(
   const started = Date.now();
   const stop = tapCounter();
   let ok = false;
+  let taps = 0;
   try {
     if (net === "int" || net === "reward") ok = await showAdsgramAd(id);
     else if (net === "giga") ok = await showGigaAd(id);
     else if (net === "monetag") ok = await showMonetagAd(id);
     else ok = await showTowerAd(id);
   } finally {
-    var taps = stop();
+    taps = stop();
   }
   const watchedMs = Date.now() - started;
   if (!ok) return { ok: false, reason: "nofill" };

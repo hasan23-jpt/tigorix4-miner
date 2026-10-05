@@ -143,7 +143,8 @@ function AdsView() {
     setPlaying(card.net);
     void (async () => {
       // Adsgram interstitial must be watched at least 15s before any reward.
-      const minMs = card.net === "int" ? 15000 : MIN_WATCH_MS;
+      const tapOn = cfg["tapRules"] !== false;
+      const minMs = card.net === "int" && !tapOn ? 15000 : MIN_WATCH_MS;
       const r = await showAd(card.net, card.blockId, minMs);
       setPlaying(null);
       if (!r.ok) {
@@ -152,8 +153,12 @@ function AdsView() {
         return;
       }
       const ok = await run(
-        () => doRecordAd({ data: { initData: auth, network: card.net } }),
-        (res) => `🎉 Reward added! +${res?.reward ?? 0} ${APP.tokenName}`
+        () =>
+          doRecordAd({
+            data: { initData: auth, network: card.net, taps: r.taps ?? 0, watchedMs: r.watchedMs ?? 0 },
+          }),
+        (res) =>
+          `🎉 Reward added! +${res?.reward ?? 0} ${APP.tokenName} · 👆 Tapped ${res?.taps ?? 0}${tapOn && res?.share != null && res.share < 1 ? ` (${Math.round(res.share * 100)}% — tap the ad for more)` : " ✅"}`
       );
       if (ok && cfg["adRotation"] !== false)
         setOrder(rotateToBack(card.net, rawCards.map((c) => c.net)));
