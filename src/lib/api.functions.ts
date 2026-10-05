@@ -69,7 +69,7 @@ const CFG_TYPES: Record<string, "number" | "boolean" | "string"> = {
   intAdsDailyCap: "number", rewardAdReward: "number", rewardAdsDailyCap: "number",
   gigaBlockId: "string", gigaAdReward: "number", gigaAdsDailyCap: "number",
   monetagBlockId: "string", monetagAdReward: "number", monetagAdsDailyCap: "number",
-  bitvexBlockId: "string", bitvexAdReward: "number", bitvexAdsDailyCap: "number",
+  towerApiKey: "string", towerPlacementId: "string", towerAdReward: "number", towerAdsDailyCap: "number",
   autoIntAd: "boolean", bannerUrl: "string", withdrawAdsRequired: "number",
   withdrawMinRefs: "number", withdrawCooldownHours: "number", withdrawAdsToWatch: "number",
   minWithdrawFirst: "number", minWithdrawNext: "number", feeFlatUsd: "number",
@@ -135,9 +135,10 @@ export const bootstrap = createServerFn({ method: "POST" })
         monetagBlockId: cfg.monetagBlockId,
         monetagAdReward: cfg.monetagAdReward,
         monetagAdsDailyCap: cfg.monetagAdsDailyCap,
-        bitvexBlockId: cfg.bitvexBlockId,
-        bitvexAdReward: cfg.bitvexAdReward,
-        bitvexAdsDailyCap: cfg.bitvexAdsDailyCap,
+        towerApiKey: cfg.towerApiKey,
+        towerPlacementId: cfg.towerPlacementId,
+        towerAdReward: cfg.towerAdReward,
+        towerAdsDailyCap: cfg.towerAdsDailyCap,
         autoIntAd: cfg.autoIntAd !== false,
         withdrawAdsRequired: cfg.withdrawAdsRequired,
         withdrawMinRefs: cfg.withdrawMinRefs,
@@ -181,8 +182,8 @@ function publicUser(u: {
   gigaAdsDayKey: string;
   monetagAdsToday: number;
   monetagAdsDayKey: string;
-  bitvexAdsToday: number;
-  bitvexAdsDayKey: string;
+  towerAdsToday: number;
+  towerAdsDayKey: string;
   wallet: string;
   withdrawCount: number;
   totalPaidUsd: number;
@@ -210,7 +211,7 @@ function publicUser(u: {
     rewardAdsToday: u.rewardAdsDayKey === today ? (u.rewardAdsToday ?? 0) : 0,
     gigaAdsToday: u.gigaAdsDayKey === today ? (u.gigaAdsToday ?? 0) : 0,
     monetagAdsToday: u.monetagAdsDayKey === today ? (u.monetagAdsToday ?? 0) : 0,
-    bitvexAdsToday: u.bitvexAdsDayKey === today ? (u.bitvexAdsToday ?? 0) : 0,
+    towerAdsToday: u.towerAdsDayKey === today ? (u.towerAdsToday ?? 0) : 0,
     wallet: u.wallet ?? "",
     withdrawCount: u.withdrawCount ?? 0,
     totalPaidUsd: u.totalPaidUsd ?? 0,
@@ -275,7 +276,7 @@ export const doClaimDailyTask = createServerFn({ method: "POST" })
 
 export const doRecordAd = createServerFn({ method: "POST" })
   .inputValidator((d: Auth & { network: AdNetwork }) => d)
-  .handler(async ({ data }) => act(data.initData, ({ user, cfg }) => recordAdView(user, cfg, (["int", "reward", "giga", "monetag", "bitvex"] as AdNetwork[]).includes(data.network) ? data.network : "int")));
+  .handler(async ({ data }) => act(data.initData, ({ user, cfg }) => recordAdView(user, cfg, (["int", "reward", "giga", "monetag", "tower"] as AdNetwork[]).includes(data.network) ? data.network : "int")));
 
 export const getReferrals = createServerFn({ method: "POST" })
   .inputValidator((d: Auth) => d)

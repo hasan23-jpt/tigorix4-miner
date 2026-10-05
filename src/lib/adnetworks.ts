@@ -11,7 +11,7 @@ import { showAdsgramAd } from "./adsgram";
 /** No minimum watch time: the reward is granted as soon as the network reports the ad finished. */
 export const MIN_WATCH_MS = 0;
 
-export type AdNet = "int" | "reward" | "giga" | "monetag" | "bitvex";
+export type AdNet = "int" | "reward" | "giga" | "monetag" | "tower";
 
 export type AdResult = { ok: boolean; reason?: "nofill" | "short" | "skip" };
 
@@ -83,45 +83,71 @@ async function showMonetagAd(zone: string): Promise<boolean> {
   }
 }
 
-/* ------------------------------- Adsbitvex ------------------------------- */
+/* -------------------------------- Tower Ads ------------------------------ */
+
+type TowerInstance = { loadAndShow: () => Promise<unknown> };
+type TowerCtor = new (opts: {
+  apiKey: string;
+  placementId: string;
+  onRewardEarned?: (reward: unknown) => void;
+  onAdClosed?: () => void;
+  onError?: (err: unknown) => void;
+}) => TowerInstance;
+
+/** Callbacks of the ad currently on screen (the SDK binds callbacks at construction). */
+let towerCurrent: { reward: () => void; closed: () => void; error: () => void } | null = null;
+const towerInstances = new Map<string, TowerInstance>();
 
 /**
- * AdsBitvex: one script tag per app id, then `window.showadsbitvex()` which
- * resolves when the full-screen reward ad finishes.
+ * Tower Ads: block ID is "apiKey|placementId". Success only when the SDK fires
+ * onRewardEarned; closing early, errors or no-fill count as not watched.
  */
-async function showBitvexAd(appId: string): Promise<boolean> {
-  const pick = () => {
-    const w = W();
-    const candidates = [
-      w["showadsbitvex"],
-      w["showAdsBitvex"],
-      (w["AdsBitvex"] as { show?: unknown } | undefined)?.show,
-    ];
-    return candidates.find((c) => typeof c === "function") as
-      | (() => Promise<unknown>)
-      | undefined;
-  };
-  if (!pick()) {
-    await loadScript(`bitvex:${appId}`, () => {
+async function showTowerAd(block: string): Promise<boolean> {
+  const [apiKey, placementId] = block.split("|").map((x) => x.trim());
+  if (!apiKey || !placementId) return false;
+  if (typeof W()["TowerAds"] !== "function") {
+    await loadScript("tower", () => {
       const s = document.createElement("script");
-      s.src = `https://sdk.adsbitvex.com/functions/v1/ad-script?appid=${encodeURIComponent(appId)}`;
+      s.src = "https://uslads.com/sdk/tower-ads-v4.js";
       return s;
     });
-    // The SDK registers its global slightly after onload in some builds.
-    for (let i = 0; i < 20 && !pick(); i++) await new Promise((r) => setTimeout(r, 100));
+    for (let i = 0; i < 20 && typeof W()["TowerAds"] !== "function"; i++)
+      await new Promise((r) => setTimeout(r, 100));
   }
-  const fn = pick();
-  if (!fn) return false;
-  try {
+  const Ctor = W()["TowerAds"] as TowerCtor | undefined;
+  if (typeof Ctor !== "function") return false;
+
+  let ads = towerInstances.get(block);
+  if (!ads) {
+    ads = new Ctor({
+      apiKey,
+      placementId,
+      onRewardEarned: () => towerCurrent?.reward(),
+      onAdClosed: () => towerCurrent?.closed(),
+      onError: () => towerCurrent?.error(),
+    });
+    towerInstances.set(block, ads);
+  }
+
+  return new Promise<boolean>((resolve) => {
+    let done = false;
+    const finish = (ok: boolean) => {
+      if (done) return;
+      done = true;
+      towerCurrent = null;
+      clearTimeout(hardStop);
+      resolve(ok);
+    };
     // Never hang forever if the SDK never settles.
-    await Promise.race([
-      fn(),
-      new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 120_000)),
-    ]);
-    return true;
-  } catch {
-    return false;
-  }
+    const hardStop = setTimeout(() => finish(false), 120_000);
+    towerCurrent = {
+      reward: () => finish(true),
+      // The reward callback can land just after close — give it a moment.
+      closed: () => setTimeout(() => finish(false), 1500),
+      error: () => finish(false),
+    };
+    ads!.loadAndShow().catch(() => finish(false));
+  });
 }
 
 /* --------------------------------- public -------------------------------- */
@@ -146,7 +172,7 @@ export async function showAd(
   if (net === "int" || net === "reward") ok = await showAdsgramAd(id);
   else if (net === "giga") ok = await showGigaAd(id);
   else if (net === "monetag") ok = await showMonetagAd(id);
-  else ok = await showBitvexAd(id);
+  else ok = await showTowerAd(id);
 
   if (!ok) return { ok: false, reason: "nofill" };
   if (minWatchMs && Date.now() - started < minWatchMs) return { ok: false, reason: "short" };

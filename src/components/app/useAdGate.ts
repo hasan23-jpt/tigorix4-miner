@@ -21,8 +21,13 @@ export function useAdGate() {
         reward: "adsgramRewardBlockId",
         giga: "gigaBlockId",
         monetag: "monetagBlockId",
-        bitvex: "bitvexBlockId",
+        tower: "towerPlacementId",
       };
+      if (net === "tower") {
+        const key = String(cfg["towerApiKey"] ?? "").trim();
+        const plc = String(cfg["towerPlacementId"] ?? "").trim();
+        return key && plc ? `${key}|${plc}` : "";
+      }
       return String(cfg[map[net]] ?? "");
     },
     [boot.cfg]
@@ -85,7 +90,7 @@ export function useAdGate() {
 
   /** Picks a random configured network and shows one ad from it. */
   const showRandomAd = useCallback(async () => {
-    const nets: AdNet[] = (["int", "reward", "giga", "monetag", "bitvex"] as AdNet[]).filter((n) =>
+    const nets: AdNet[] = (["int", "reward", "giga", "monetag", "tower"] as AdNet[]).filter((n) =>
       hasBlock(blockOf(n))
     );
     if (!nets.length) return true;

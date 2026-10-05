@@ -889,7 +889,8 @@ const AD_TEXT_FIELDS = [
   ["adsgramRewardBlockId", "Adsgram rewarded block ID"],
   ["gigaBlockId", "Gigapub project ID"],
   ["monetagBlockId", "Monetag zone ID"],
-  ["bitvexBlockId", "Adsbitvex zone ID"],
+  ["towerApiKey", "Tower Ads API key"],
+  ["towerPlacementId", "Tower Ads placement ID"],
 ] as const;
 
 const AD_NUMBER_FIELDS = [
@@ -901,8 +902,8 @@ const AD_NUMBER_FIELDS = [
   ["gigaAdsDailyCap", "Gigapub daily ad limit"],
   ["monetagAdReward", "Monetag reward (tokens per ad)"],
   ["monetagAdsDailyCap", "Monetag daily ad limit"],
-  ["bitvexAdReward", "Adsbitvex reward (tokens per ad)"],
-  ["bitvexAdsDailyCap", "Adsbitvex daily ad limit"],
+  ["towerAdReward", "Tower Ads reward (tokens per ad)"],
+  ["towerAdsDailyCap", "Tower Ads daily ad limit"],
   ["withdrawAdsRequired", "Daily ads required to withdraw"],
   ["withdrawMinRefs", "Valid referrals required to withdraw"],
   ["withdrawCooldownHours", "Withdrawal cooldown (hours)"],
@@ -944,7 +945,7 @@ function AdsAdmin({
         <SectionTitle
           icon="📺"
           title="Ad Networks"
-          action={<Pill tone="info">Adsgram · Gigapub · Monetag · Adsbitvex</Pill>}
+          action={<Pill tone="info">Adsgram · Gigapub · Monetag · Tower Ads</Pill>}
         />
         <Guide>
           Set the Adsgram block IDs and rewards. The interstitial block gates mining, reward codes and
