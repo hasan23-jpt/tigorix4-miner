@@ -11,7 +11,7 @@ import { showAdsgramAd } from "./adsgram";
 /** No minimum watch time: the reward is granted as soon as the network reports the ad finished. */
 export const MIN_WATCH_MS = 0;
 
-export type AdNet = "int" | "reward" | "giga" | "monetag" | "bitvex";
+export type AdNet = "int" | "reward" | "giga" | "monetag" | "tower";
 
 export type AdResult = { ok: boolean; reason?: "nofill" | "short" | "skip" };
 
@@ -172,7 +172,7 @@ export async function showAd(
   if (net === "int" || net === "reward") ok = await showAdsgramAd(id);
   else if (net === "giga") ok = await showGigaAd(id);
   else if (net === "monetag") ok = await showMonetagAd(id);
-  else ok = await showBitvexAd(id);
+  else ok = await showTowerAd(id);
 
   if (!ok) return { ok: false, reason: "nofill" };
   if (minWatchMs && Date.now() - started < minWatchMs) return { ok: false, reason: "short" };
