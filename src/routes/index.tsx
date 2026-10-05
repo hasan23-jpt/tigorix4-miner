@@ -13,6 +13,8 @@ import { ProfileTab } from "@/components/app/ProfileTab";
 import { AdminPanel } from "@/components/app/AdminPanel";
 import { useAdGate } from "@/components/app/useAdGate";
 import { JoinGate } from "@/components/app/JoinGate";
+import { FarmScene } from "@/components/app/FarmScene";
+import { Tutorial } from "@/components/app/Tutorial";
 import { I18nProvider, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
@@ -125,8 +127,10 @@ function Shell() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
+    <div className="relative isolate mx-auto flex min-h-screen w-full max-w-md flex-col">
+      {boot.cfg.farmScene !== false && <FarmScene />}
       {!state.admin && <JoinGate />}
+      {!admin && boot.cfg.tutorialEnabled !== false && <Tutorial />}
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur">
         <img
           src="/tigorix-logo.png"

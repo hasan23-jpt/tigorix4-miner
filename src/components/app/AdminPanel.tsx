@@ -719,6 +719,8 @@ function SettingsAdmin({
         </GoldButton>
       </Card>
 
+      <FeatureToggles cfg={cfg} busy={busy} run={run} admin={admin} onDone={onDone} />
+
       <Card>
         <SectionTitle
           icon="📺"
@@ -1428,6 +1430,68 @@ function SuspendedAdmin({
         {!rows.length && (
           <p className="py-4 text-center text-xs text-muted-foreground">🎉 No suspended users.</p>
         )}
+      </div>
+    </Card>
+  );
+}
+
+
+const FEATURES = [
+  { key: "remindersEnabled", label: "⏰ Twice-daily bot reminders", hint: "Bot nudges users about 06:00 & 18:00 UTC, even with the app closed." },
+  { key: "withdrawUserNotify", label: "🧾 Withdrawal request message", hint: "Bot confirms each withdrawal request to the user (wallet masked)." },
+  { key: "tutorialEnabled", label: "🎓 First-run tutorial", hint: "Shows the welcome guide once to new users." },
+  { key: "farmScene", label: "🌾 Animated farm background", hint: "Tiger farmer, fields and falling coins behind the app." },
+  { key: "adRotation", label: "🔄 Ad card rotation", hint: "A watched network moves to the back of the list." },
+] as const;
+
+function FeatureToggles({
+  cfg,
+  busy,
+  run,
+  admin,
+  onDone,
+}: {
+  cfg: Record<string, unknown>;
+  busy: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  run: (fn: () => Promise<any>, ok?: (r: any) => string) => Promise<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  admin: any;
+  onDone: () => void;
+}) {
+  const [vals, setVals] = useState<Record<string, boolean>>(
+    Object.fromEntries(FEATURES.map((f) => [f.key, cfg[f.key] !== false]))
+  );
+  return (
+    <Card>
+      <SectionTitle icon="🧩" title="Feature switches" />
+      <div className="space-y-2">
+        {FEATURES.map((f) => {
+          const on = vals[f.key];
+          return (
+            <div key={f.key} className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-2.5">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold">{f.label}</p>
+                <p className="text-[11px] text-muted-foreground">{f.hint}</p>
+              </div>
+              <button
+                disabled={busy}
+                onClick={() => {
+                  const next = !on;
+                  void run(
+                    () => adminSaveConfig({ data: { ...admin, patch: { [f.key]: next } } }),
+                    () => `${f.label}: ${next ? "on" : "off"}`
+                  ).then((r) => {
+                    if (r) setVals((v) => ({ ...v, [f.key]: next }));
+                    onDone();
+                  });
+                }}
+              >
+                <Pill tone={on ? "success" : "muted"}>{on ? "on" : "off"}</Pill>
+              </button>
+            </div>
+          );
+        })}
       </div>
     </Card>
   );

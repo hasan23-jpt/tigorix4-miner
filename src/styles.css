@@ -314,3 +314,31 @@
     }
   }
 }
+
+/* ---------------- Tiger farm scene ---------------- */
+:root {
+  --farm-sky: linear-gradient(180deg, oklch(0.22 0.04 60), oklch(0.17 0.02 55) 60%);
+  --farm-sun: radial-gradient(circle, oklch(0.88 0.16 85), oklch(0.72 0.19 55) 60%, transparent 72%);
+  --farm-hill-back: oklch(0.3 0.07 120);
+  --farm-hill-front: oklch(0.36 0.09 110);
+  --farm-rows: repeating-linear-gradient(90deg, oklch(0.42 0.1 90) 0 14px, oklch(0.34 0.08 80) 14px 28px);
+}
+.farm-sky { background: var(--farm-sky); }
+.farm-sun { background: var(--farm-sun); animation: farm-sun 6s ease-in-out infinite; }
+.farm-hill-back { background: var(--farm-hill-back); opacity: 0.7; }
+.farm-hill-front { background: var(--farm-hill-front); opacity: 0.8; }
+.farm-rows { background: var(--farm-rows); opacity: 0.35; mask-image: linear-gradient(transparent, black); }
+.farm-cloud { left: -15%; animation: farm-drift 40s linear infinite; }
+.farm-cloud-2 { animation-duration: 60s; animation-delay: -20s; }
+.farm-coin { top: -10%; animation: farm-fall linear infinite; opacity: 0.5; }
+.farm-walker { left: -20%; animation: farm-walk 24s linear infinite; }
+.farm-pop { animation: farm-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.farm-tile { box-shadow: inset 0 -3px 0 color-mix(in oklab, var(--primary) 35%, transparent); }
+@keyframes farm-sun { 50% { transform: scale(1.08); filter: brightness(1.15); } }
+@keyframes farm-drift { to { transform: translateX(140vw); } }
+@keyframes farm-fall { to { transform: translateY(115vh) rotate(360deg); } }
+@keyframes farm-walk { to { transform: translateX(150vw); } }
+@keyframes farm-pop { from { transform: scale(0.85); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .farm-scene * { animation: none !important; }
+}
