@@ -6,6 +6,7 @@ import { openLink } from "@/lib/telegram";
 import { MIN_WATCH_MS, adErrorMessage, hasBlock, showAd, type AdNet } from "@/lib/adnetworks";
 import { doClaimSite, doRecordAd, getSites } from "@/lib/api.functions";
 import { useAppState } from "./useApp";
+import { readOrder, rotateToBack, sortByRotation } from "@/lib/adRotation";
 import { Card, GhostButton, GoldButton, Guide, Pill, SectionTitle, Stat } from "./ui";
 import adsgramLogo from "@/assets/adsgram-logo.png";
 import monetagLogo from "@/assets/monetag-logo.png";
@@ -70,7 +71,9 @@ function AdsView() {
   const cfg = boot.cfg as unknown as Record<string, number | string | boolean>;
   const u = state.user as unknown as Record<string, number>;
 
-  const cards: NetworkCard[] = ([
+  const [order, setOrder] = useState<string[]>([]);
+  useEffect(() => setOrder(readOrder()), []);
+  const rawCards: NetworkCard[] = ([
     {
       net: "int",
       network: "Adsgram · Interstitial",
@@ -120,6 +123,7 @@ function AdsView() {
       seen: Number(u["towerAdsToday"] ?? 0),
     },
   ] as NetworkCard[]).filter((c) => hasBlock(c.blockId));
+  const cards = cfg["adRotation"] === false ? rawCards : sortByRotation(rawCards, order);
 
   const totalCap = cards.reduce((sum, c) => sum + c.cap, 0);
   const totalTgx = cards.reduce((sum, c) => sum + c.cap * c.reward, 0);
@@ -147,10 +151,12 @@ function AdsView() {
         toast.error(adErrorMessage(r), { description: "Tap Watch Ad again to retry." });
         return;
       }
-      await run(
+      const ok = await run(
         () => doRecordAd({ data: { initData: auth, network: card.net } }),
         (res) => `🎉 Reward added! +${res?.reward ?? 0} ${APP.tokenName}`
       );
+      if (ok && cfg["adRotation"] !== false)
+        setOrder(rotateToBack(card.net, rawCards.map((c) => c.net)));
     })();
   };
 
