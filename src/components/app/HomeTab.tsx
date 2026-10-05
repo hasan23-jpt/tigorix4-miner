@@ -164,7 +164,7 @@ export function HomeTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
         <QuickAction icon={<Wallet className="size-5" />} label="Withdraw" onClick={() => onNavigate("profile")} />
       </div>
 
-      <QuickTasks onSeeAll={() => onNavigate("tasks")} />
+      <QuickTasks onSeeAll={() => onNavigate("tasks")} onAds={() => onNavigate("ads")} />
 
       <Card>
         <SectionTitle icon="🎫" title="Reward Code" />
