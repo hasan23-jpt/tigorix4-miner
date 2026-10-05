@@ -38,9 +38,10 @@ export type Cfg = {
   monetagBlockId: string;
   monetagAdReward: number;
   monetagAdsDailyCap: number;
-  bitvexBlockId: string;
-  bitvexAdReward: number;
-  bitvexAdsDailyCap: number;
+  towerApiKey: string;
+  towerPlacementId: string;
+  towerAdReward: number;
+  towerAdsDailyCap: number;
   autoIntAd: boolean;
   bannerUrl: string;
   withdrawAdsRequired: number;
@@ -83,9 +84,10 @@ const DEFAULT_CFG: Cfg = {
   monetagBlockId: "11632109",
   monetagAdReward: 20,
   monetagAdsDailyCap: 10,
-  bitvexBlockId: "000363",
-  bitvexAdReward: 20,
-  bitvexAdsDailyCap: 10,
+  towerApiKey: "384f791278bcc31f06b0b2e0a50c4edb",
+  towerPlacementId: "plc_970217c7463e8ce1",
+  towerAdReward: 20,
+  towerAdsDailyCap: 10,
   autoIntAd: true,
   bannerUrl: "",
   withdrawAdsRequired: 20,
@@ -173,8 +175,8 @@ export type UserDoc = {
   gigaAdsDayKey: string;
   monetagAdsToday: number;
   monetagAdsDayKey: string;
-  bitvexAdsToday: number;
-  bitvexAdsDayKey: string;
+  towerAdsToday: number;
+  towerAdsDayKey: string;
   miningNotified: boolean;
   lastWithdrawAt: number;
   wallet: string;
@@ -219,8 +221,8 @@ function blankUser(a: AuthUser): UserDoc {
     gigaAdsDayKey: "",
     monetagAdsToday: 0,
     monetagAdsDayKey: "",
-    bitvexAdsToday: 0,
-    bitvexAdsDayKey: "",
+    towerAdsToday: 0,
+    towerAdsDayKey: "",
     miningNotified: true,
     lastWithdrawAt: 0,
     wallet: "",
@@ -719,7 +721,7 @@ export async function adminDeleteSite(id: string) {
 
 /* ------------------------------ ads / referrals ------------------------ */
 
-export type AdNetwork = "int" | "reward" | "giga" | "monetag" | "bitvex";
+export type AdNetwork = "int" | "reward" | "giga" | "monetag" | "tower";
 
 const AD_NETWORKS: Record<
   AdNetwork,
@@ -749,11 +751,11 @@ const AD_NETWORKS: Record<
     cap: "monetagAdsDailyCap",
     block: "monetagBlockId",
   },
-  bitvex: {
-    label: "Adsbitvex",
-    reward: "bitvexAdReward",
-    cap: "bitvexAdsDailyCap",
-    block: "bitvexBlockId",
+  tower: {
+    label: "Tower Ads",
+    reward: "towerAdReward",
+    cap: "towerAdsDailyCap",
+    block: "towerPlacementId",
   },
 };
 

@@ -9,7 +9,6 @@ import { useAppState } from "./useApp";
 import { Card, GhostButton, GoldButton, Guide, Pill, SectionTitle, Stat } from "./ui";
 import adsgramLogo from "@/assets/adsgram-logo.png";
 import monetagLogo from "@/assets/monetag-logo.png";
-import bitvexLogo from "@/assets/adsbitvex-logo.png";
 
 function usdOf(tgx: number) {
   return `$${(tgx / APP.tokensPerUsd).toFixed(4)}`;
@@ -19,7 +18,6 @@ const LOGOS: Partial<Record<AdNet, string>> = {
   int: adsgramLogo,
   reward: adsgramLogo,
   monetag: monetagLogo,
-  bitvex: bitvexLogo,
 };
 
 /**
@@ -110,13 +108,16 @@ function AdsView() {
       seen: Number(u["monetagAdsToday"] ?? 0),
     },
     {
-      net: "bitvex",
-      network: "Adsbitvex",
-      title: "Adsbitvex Ad",
-      blockId: String(cfg["bitvexBlockId"] ?? ""),
-      reward: Number(cfg["bitvexAdReward"] ?? 20),
-      cap: Number(cfg["bitvexAdsDailyCap"] ?? 10),
-      seen: Number(u["bitvexAdsToday"] ?? 0),
+      net: "tower",
+      network: "Tower Ads",
+      title: "Tower Ad",
+      blockId:
+        String(cfg["towerApiKey"] ?? "").trim() && String(cfg["towerPlacementId"] ?? "").trim()
+          ? `${String(cfg["towerApiKey"]).trim()}|${String(cfg["towerPlacementId"]).trim()}`
+          : "",
+      reward: Number(cfg["towerAdReward"] ?? 20),
+      cap: Number(cfg["towerAdsDailyCap"] ?? 10),
+      seen: Number(u["towerAdsToday"] ?? 0),
     },
   ] as NetworkCard[]).filter((c) => hasBlock(c.blockId));
 
@@ -240,7 +241,7 @@ function AdBlockCard({
           />
         ) : (
           <span className="grid size-10 place-items-center rounded-xl bg-info/20 text-sm font-black text-info ring-1 ring-info/40">
-            GP
+            {network.slice(0, 2).toUpperCase()}
           </span>
         )}
         <div className="min-w-0">
