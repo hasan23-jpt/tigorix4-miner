@@ -160,6 +160,35 @@ export function hasBlock(id: string | undefined | null) {
  * Shows one ad from the given network. When `minWatchMs` is set, an ad that
  * closed too quickly counts as not watched (`reason: "short"`).
  */
+/**
+ * Counts ad taps while an ad is on screen. Tapping an ad opens the advertiser's
+ * link, which takes focus away from the mini app (blur / page hidden). Each
+ * focus loss = one tap. Cheap listeners only, so ads are never slowed down.
+ */
+function tapCounter() {
+  let taps = 0;
+  let away = false;
+  const leave = () => {
+    if (!away) {
+      away = true;
+      taps += 1;
+    }
+  };
+  const back = () => {
+    away = false;
+  };
+  const vis = () => (document.hidden ? leave() : back());
+  window.addEventListener("blur", leave);
+  window.addEventListener("focus", back);
+  document.addEventListener("visibilitychange", vis);
+  return () => {
+    window.removeEventListener("blur", leave);
+    window.removeEventListener("focus", back);
+    document.removeEventListener("visibilitychange", vis);
+    return taps;
+  };
+}
+
 export async function showAd(
   net: AdNet,
   blockId: string | undefined,
@@ -168,15 +197,20 @@ export async function showAd(
   const id = String(blockId ?? "").trim();
   if (!hasBlock(id)) return { ok: false, reason: "nofill" };
   const started = Date.now();
+  const stop = tapCounter();
   let ok = false;
-  if (net === "int" || net === "reward") ok = await showAdsgramAd(id);
-  else if (net === "giga") ok = await showGigaAd(id);
-  else if (net === "monetag") ok = await showMonetagAd(id);
-  else ok = await showTowerAd(id);
-
+  try {
+    if (net === "int" || net === "reward") ok = await showAdsgramAd(id);
+    else if (net === "giga") ok = await showGigaAd(id);
+    else if (net === "monetag") ok = await showMonetagAd(id);
+    else ok = await showTowerAd(id);
+  } finally {
+    var taps = stop();
+  }
+  const watchedMs = Date.now() - started;
   if (!ok) return { ok: false, reason: "nofill" };
-  if (minWatchMs && Date.now() - started < minWatchMs) return { ok: false, reason: "short" };
-  return { ok: true };
+  if (minWatchMs && watchedMs < minWatchMs) return { ok: false, reason: "short" };
+  return { ok: true, taps: Math.min(3, taps), watchedMs };
 }
 
 export function adErrorMessage(r: AdResult) {
