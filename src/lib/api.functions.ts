@@ -74,7 +74,8 @@ const CFG_TYPES: Record<string, "number" | "boolean" | "string"> = {
   withdrawMinRefs: "number", withdrawCooldownHours: "number", withdrawAdsToWatch: "number",
   minWithdrawFirst: "number", minWithdrawNext: "number", feeFlatUsd: "number",
   feePercent: "number", adminPassword: "string", maintenance: "boolean",
-  withdrawEnabled: "boolean", minAdGapSec: "number", maintenanceText: "string",
+  withdrawEnabled: "boolean", remindersEnabled: "boolean", withdrawUserNotify: "boolean",
+  tutorialEnabled: "boolean", farmScene: "boolean", adRotation: "boolean", minAdGapSec: "number", maintenanceText: "string",
 };
 
 function cleanCfgPatch(patch: Record<string, unknown>) {
@@ -151,6 +152,9 @@ export const bootstrap = createServerFn({ method: "POST" })
         tokensPerUsd: cfg.tokensPerUsd,
         maintenance: cfg.maintenance,
         withdrawEnabled: cfg.withdrawEnabled !== false,
+        tutorialEnabled: cfg.tutorialEnabled !== false,
+        farmScene: cfg.farmScene !== false,
+        adRotation: cfg.adRotation !== false,
       },
       user: publicUser(user),
       mining: miningState(user, cfg),

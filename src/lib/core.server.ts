@@ -56,6 +56,11 @@ export type Cfg = {
   adminPassword: string;
   maintenance: boolean;
   withdrawEnabled: boolean;
+  remindersEnabled: boolean;
+  withdrawUserNotify: boolean;
+  tutorialEnabled: boolean;
+  farmScene: boolean;
+  adRotation: boolean;
   minAdGapSec: number;
   maintenanceText: string;
 };
@@ -102,6 +107,11 @@ const DEFAULT_CFG: Cfg = {
   adminPassword: "Aabbcc.123",
   maintenance: false,
   withdrawEnabled: true,
+  remindersEnabled: true,
+  withdrawUserNotify: true,
+  tutorialEnabled: true,
+  farmScene: true,
+  adRotation: true,
   minAdGapSec: 8,
   maintenanceText: "",
 };
@@ -1141,7 +1151,49 @@ export async function requestWithdraw(user: UserDoc, cfg: Cfg, tokens: number) {
     `💸 <b>New withdrawal request</b>\n\n👤 ${label(user)} (<code>${user.id}</code>)\n🔢 Withdrawal #${number}\n🪙 Amount: <b>${amount} ${APP.tokenName}</b>\n🧾 Fee: $${q.fee.toFixed(4)}\n💵 Net: <b>$${q.net.toFixed(4)}</b>\n💳 <code>${user.wallet}</code>\n🕒 Status: pending`,
     [[btn.miniApp]]
   );
+  if (cfg.withdrawUserNotify !== false) {
+    const w = user.wallet;
+    const masked = w.length > 10 ? `${w.slice(0, 6)}…${w.slice(-4)}` : w;
+    await sendMessage(
+      user.id,
+      `🧾 <b>Withdrawal request received</b>\n\n🔢 Request #${number}\n🪙 ${amount} ${APP.tokenName}\n💵 You receive: <b>$${q.net.toFixed(4)} USDT</b> (BEP-20)\n💳 Wallet: <code>${masked}</code>\n🕒 Status: <b>pending review</b>\n\nWe will message you again when it is paid. 🐯`
+    ).catch(() => null);
+  }
   return { id, ...q, balance: user.balance };
+}
+
+/**
+ * Twice-daily farm reminder. Called by the reminders cron; each user gets at
+ * most one message per 11 hours, so extra cron hits never spam anyone.
+ */
+export async function sendFarmReminders(offset = 0) {
+  const cfg = await getCfg();
+  if (cfg.remindersEnabled === false) return { sent: 0, next: null as number | null };
+  const all = (await allDocs<UserDoc & { lastReminderAt?: number }>("users")).filter(
+    (u) => !u.suspended && u.notifications !== false
+  );
+  const slice = all.slice(offset, offset + BROADCAST_CHUNK);
+  const gap = 11 * 3600 * 1000;
+  let sent = 0;
+  for (let i = 0; i < slice.length; i += 25) {
+    const t0 = Date.now();
+    const batch = slice.slice(i, i + 25).filter((u) => Date.now() - (u.lastReminderAt ?? 0) > gap);
+    await Promise.all(
+      batch.map(async (u) => {
+        const ok = await sendMessage(
+          u.id,
+          `🐯🌾 <b>Your tiger farm misses you!</b>\n\n⛏ Start or claim your mining session\n📺 Fresh ads are ready to watch\n🎁 Daily reward & tasks are waiting\n\nCome back and keep your farm growing!`,
+          [[btn.miniApp]]
+        ).catch(() => null);
+        await setDoc(`users/${u.id}`, { lastReminderAt: Date.now() });
+        if (ok) sent++;
+      })
+    );
+    const wait = 1000 - (Date.now() - t0);
+    if (i + 25 < slice.length && wait > 0) await new Promise((r) => setTimeout(r, wait));
+  }
+  const done = offset + slice.length;
+  return { sent, next: done < all.length ? done : null };
 }
 
 export async function listTransactions(user: UserDoc) {
@@ -1481,7 +1533,6 @@ export async function adminBroadcast(
   const keyboard: { text: string; url: string }[][] = [];
   const extra = (opts.buttons ?? []).filter((b) => b.text && b.url);
   for (let i = 0; i < extra.length; i += 2) keyboard.push(extra.slice(i, i + 2));
-  keyboard.push([btn.miniApp], [btn.community, btn.payment]);
   const photo = (opts.photo ?? "").trim();
   const send = (chat: string | number) =>
     photo ? sendPhoto(chat, photo, text, keyboard) : sendMessage(chat, text, keyboard);
