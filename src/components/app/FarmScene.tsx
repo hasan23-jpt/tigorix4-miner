@@ -1,7 +1,10 @@
 /** Animated tiger-farm backdrop: sun, drifting clouds, rolling fields, a walking tiger farmer and falling coins. */
-export function FarmScene() {
+export function FarmScene({ mining = false }: { mining?: boolean }) {
   return (
-    <div aria-hidden className="farm-scene pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div
+      aria-hidden
+      className={`farm-scene pointer-events-none fixed inset-0 -z-10 overflow-hidden ${mining ? "is-mining" : "is-idle"}`}
+    >
       <div className="farm-sky absolute inset-0" />
       <div className="farm-sun absolute right-8 top-16 size-24 rounded-full" />
       <span className="farm-cloud absolute top-24 text-4xl opacity-40">☁️</span>
