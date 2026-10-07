@@ -11,6 +11,8 @@ import {
   adminSendBroadcast,
   adminTaskDelete,
   adminTaskSave,
+  adminGateDelete,
+  adminGateSave,
   adminSiteDelete,
   adminSiteSave,
   adminUpdateUser,
@@ -156,7 +158,10 @@ staleTime: 30000,
           onDone={() => void refetch()}
         />
       ) : tab === "tasks" ? (
-        <TasksAdmin admin={admin} tasks={data.tasks} onDone={() => void refetch()} />
+        <div className="space-y-4">
+          <TasksAdmin admin={admin} tasks={data.tasks} onDone={() => void refetch()} />
+          <GateAdmin admin={admin} channels={data.gate ?? []} onDone={() => void refetch()} />
+        </div>
       ) : tab === "codes" ? (
         <CodesAdmin admin={admin} codes={data.codes} onDone={() => void refetch()} />
       ) : tab === "ads" ? (
