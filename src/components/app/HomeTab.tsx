@@ -1,3 +1,4 @@
+import { MiningTiger } from "./MiningTiger";
 import { useEffect, useState } from "react";
 import { Gift, Pickaxe, ShieldCheck, Ticket, Users, Wallet } from "lucide-react";
 import { APP, DAILY_REWARDS, fmt } from "@/lib/config";
@@ -98,31 +99,21 @@ export function HomeTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
             {running ? "Mining" : mining.status === "claimable" ? "Ready" : "Idle"}
           </Pill>}
         />
-        <Guide>
-          Start mining to earn {fmt(mining.reward || 100)} {APP.tokenName} per session. Mining runs
-          for 1 hour, then stops automatically — claim your reward to start again. You also get a
-          bot notification when the session finishes.
-        </Guide>
-
-        <div className="mb-3 flex items-center gap-3">
-          <div className="grid size-14 place-items-center rounded-full border border-primary/40 bg-background/60">
-            <Pickaxe className={running ? "size-6 animate-bounce text-primary" : "size-6 text-primary"} />
+        <MiningTiger running={running} />
+        <div className="mb-3">
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className="bg-gold-gradient h-full transition-all"
+              style={{ width: `${running ? progress : mining.status === "claimable" ? 100 : 0}%` }}
+            />
           </div>
-          <div className="flex-1">
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
-              <div
-                className="bg-gold-gradient h-full transition-all"
-                style={{ width: `${running ? progress : mining.status === "claimable" ? 100 : 0}%` }}
-              />
-            </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              {running
-                ? `⏳ ${countdown(mining.endsAt - now)} left`
-                : mining.status === "claimable"
-                  ? "✅ Session complete — claim your tokens!"
-                  : "💤 Not mining right now"}
-            </p>
-          </div>
+          <p className="mt-1.5 text-center text-xs text-muted-foreground">
+            {running
+              ? `⛏ ${countdown(mining.endsAt - now)} left · ${fmt(mining.reward || 100)} ${APP.tokenName}`
+              : mining.status === "claimable"
+                ? "✅ Done — claim your tokens!"
+                : `💤 1h session · ${fmt(mining.reward || 100)} ${APP.tokenName}`}
+          </p>
         </div>
 
         {mining.status === "claimable" ? (

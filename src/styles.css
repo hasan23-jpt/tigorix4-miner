@@ -342,3 +342,12 @@
 @media (prefers-reduced-motion: reduce) {
   .farm-scene * { animation: none !important; }
 }
+
+@keyframes tg-mine { 0%,100% { transform: rotate(0) translateY(0); } 40% { transform: rotate(-6deg) translateY(-4px); } 60% { transform: rotate(5deg) translateY(2px); } }
+@keyframes tg-sleep { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03, .97); } }
+@keyframes tg-chip { 0% { opacity: 0; transform: translate(0,0) scale(.6); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(22px,-34px) scale(1); } }
+@keyframes tg-z { 0% { opacity: 0; transform: translate(0,6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(10px,-18px); } }
+.tg-mine { animation: tg-mine .7s ease-in-out infinite; transform-origin: 50% 90%; }
+.tg-sleep { animation: tg-sleep 3s ease-in-out infinite; transform-origin: 50% 100%; filter: brightness(.65) saturate(.7); }
+.tg-chip { animation: tg-chip .8s ease-out infinite; }
+.tg-z { animation: tg-z 2.1s ease-in-out infinite; }
