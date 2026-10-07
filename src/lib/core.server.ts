@@ -1522,7 +1522,7 @@ export async function decideWithdraw(
     `✅ <b>Status:</b> SUCCESS\n` +
     `━━━━━━━━━━━━━━━━━━\n` +
     `💎 Real users. Real payouts. Start earning now! 🚀`;
-  const banner = origin ? `${origin}/payment-banner.jpg` : "";
+  const banner = origin ? `${origin}/payment-banner.png` : "";
   const keyboardPost = [
     [{ text: "🔎 View Transaction", url: txUrl }],
     [btn.miniApp],
