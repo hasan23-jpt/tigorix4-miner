@@ -64,7 +64,10 @@ export type Cfg = {
   tapRules: boolean;
   minAdGapSec: number;
   maintenanceText: string;
+  gateTasks: GateTask[];
 };
+
+export type GateTask = { id: string; kind: "channel" | "app"; name: string; url: string; imageUrl: string };
 
 const DEFAULT_CFG: Cfg = {
   miningReward: 100,
@@ -116,6 +119,7 @@ const DEFAULT_CFG: Cfg = {
   tapRules: true,
   minAdGapSec: 8,
   maintenanceText: "",
+  gateTasks: [],
 };
 
 let cfgCache: { value: Cfg; expiresAt: number } | null = null;
@@ -567,13 +571,64 @@ export async function verifyTask(user: UserDoc, taskId: string) {
 
 /** Which required channels the user has not joined (checked live by the bot). */
 export async function requiredChannelsStatus(userId: string) {
+  const cfg = await getCfg();
+  const base = REQUIRED_CHANNELS.map((c) => ({ ...c, kind: "channel" as const, imageUrl: "", chat: `@${c.id}` }));
+  const extra = (cfg.gateTasks ?? []).map((g) => ({
+    id: g.id,
+    name: g.name,
+    url: g.url,
+    kind: g.kind,
+    imageUrl: g.imageUrl,
+    chat: g.kind === "channel" ? gateChat(g.url) : "",
+  }));
   const rows = await Promise.all(
-    REQUIRED_CHANNELS.map(async (c) => ({
-      ...c,
-      joined: await isChannelMember(`@${c.id}`, userId).catch(() => false),
+    [...base, ...extra].map(async (c) => ({
+      id: c.id,
+      name: c.name,
+      url: c.url,
+      kind: c.kind,
+      imageUrl: c.imageUrl,
+      joined:
+        c.kind === "channel"
+          ? await isChannelMember(c.chat, userId).catch(() => false)
+          : !!(await getDoc(`gateDone/${userId}_${c.id}`)),
     }))
   );
   return { channels: rows, allJoined: rows.every((r) => r.joined) };
+}
+
+function gateChat(url: string) {
+  const m = url.trim().match(/(?:t\.me\/|@)([A-Za-z0-9_]{4,})/);
+  return m ? `@${m[1]}` : url.trim();
+}
+
+/** Gate mini-app item: record the open, then verify after 5 seconds (server time). */
+export async function gateOpen(userId: string, id: string) {
+  await setDoc(`gateOpens/${userId}_${id}`, { at: Date.now() });
+  return { ok: true };
+}
+
+export async function gateVerify(userId: string, id: string) {
+  const cfg = await getCfg();
+  const g = (cfg.gateTasks ?? []).find((x) => x.id === id && x.kind === "app");
+  if (!g) throw new Error("Task not found");
+  const o = await getDoc<{ at: number }>(`gateOpens/${userId}_${id}`);
+  if (!o) throw new Error("▶️ Open the mini app first.");
+  if (Date.now() - o.at < 5000) throw new Error("⏱ Please stay on the mini app for at least 5 seconds.");
+  await setDoc(`gateDone/${userId}_${id}`, { at: Date.now() });
+  return { ok: true };
+}
+
+export async function adminSaveGate(list: GateTask[]) {
+  const clean = list.slice(0, 20).map((g, i) => ({
+    id: String(g.id || `g${Date.now()}${i}`).replace(/[^A-Za-z0-9_]/g, "").slice(0, 40) || `g${i}`,
+    kind: g.kind === "app" ? ("app" as const) : ("channel" as const),
+    name: String(g.name ?? "").slice(0, 60),
+    url: String(g.url ?? "").slice(0, 300),
+    imageUrl: String(g.imageUrl ?? "").slice(0, 400),
+  })).filter((g) => /^https:\/\//.test(g.url));
+  await saveCfg({ gateTasks: clean });
+  return { ok: true, count: clean.length };
 }
 
 export async function taskStatus(user: UserDoc) {
@@ -1467,7 +1522,14 @@ export async function decideWithdraw(
     `✅ <b>Status:</b> SUCCESS\n` +
     `━━━━━━━━━━━━━━━━━━\n` +
     `💎 Real users. Real payouts. Start earning now! 🚀`;
-  const posted = await sendMessage(APP.paymentChatId, post, [
+  const banner = origin ? `${origin}/payment-banner.png` : "";
+  const keyboardPost = [
+    [{ text: "🔎 View Transaction", url: txUrl }],
+    [btn.miniApp],
+  ];
+  const posted = banner
+    ? await sendPhoto(APP.paymentChatId, banner, post, keyboardPost)
+    : await sendMessage(APP.paymentChatId, post, [
     [{ text: "🔎 View Transaction", url: txUrl }],
     [btn.miniApp],
   ]);

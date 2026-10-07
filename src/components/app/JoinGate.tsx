@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getRequiredChannels } from "@/lib/api.functions";
+import { doGateOpen, doGateVerify, getRequiredChannels } from "@/lib/api.functions";
 import { openLink } from "@/lib/telegram";
 import { useAppState } from "./useApp";
 import { GoldButton } from "./ui";
@@ -16,6 +16,12 @@ export function JoinGate() {
     refetchOnWindowFocus: false,
   });
   const [open, setOpen] = useState(false);
+  const [opened, setOpened] = useState<Record<string, number>>({});
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(t);
+  }, []);
   useEffect(() => {
     if (data) setOpen(!data.allJoined);
   }, [data]);
@@ -35,25 +41,53 @@ export function JoinGate() {
         <img src="/tigorix-logo.png" alt="Tigorix" className="mx-auto size-16 rounded-full ring-2 ring-primary" />
         <h2 className="mt-3 text-center text-lg font-extrabold">📢 Join our channels</h2>
         <p className="mt-1 text-center text-xs text-muted-foreground">
-          Stay joined to all 4 channels to use Tigorix.
+          Complete every item below to use Tigorix.
         </p>
         <div className="mt-4 space-y-2">
-          {data.channels.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => openLink(c.url)}
-              className="flex w-full items-center gap-3 rounded-xl border border-border bg-background/50 p-2.5 text-left active:scale-[0.98]"
-            >
-              <ChannelLogo id={c.id} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold">{c.name}</span>
-                <span className="block text-[10px] text-muted-foreground">@{c.id}</span>
-              </span>
-              <span className={`text-xs font-extrabold ${c.joined ? "text-success" : "text-primary"}`}>
-                {c.joined ? "✅ Joined" : "Join ➜"}
-              </span>
-            </button>
-          ))}
+          {data.channels.map((c) => {
+            const isApp = c.kind === "app";
+            const at = opened[c.id] ?? 0;
+            const left = at ? Math.max(0, 5 - Math.floor((now - at) / 1000)) : 0;
+            const click = async () => {
+              if (c.joined) return;
+              if (isApp && at && left === 0) {
+                try {
+                  await doGateVerify({ data: { initData: auth, id: c.id } });
+                  toast.success("✅ Verified");
+                  void refetch();
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Not verified");
+                }
+                return;
+              }
+              if (isApp) {
+                setOpened((o) => ({ ...o, [c.id]: Date.now() }));
+                void doGateOpen({ data: { initData: auth, id: c.id } }).catch(() => {});
+              }
+              openLink(c.url);
+            };
+            const status = c.joined
+              ? "✅ Done"
+              : isApp
+                ? at
+                  ? left > 0 ? `⏱ ${left}s` : "🔎 Verify"
+                  : "Open ➜"
+                : "Join ➜";
+            return (
+              <button
+                key={c.id}
+                onClick={() => void click()}
+                className="flex w-full items-center gap-3 rounded-xl border border-border bg-background/50 p-2.5 text-left active:scale-[0.98]"
+              >
+                <ChannelLogo id={c.id} src={c.imageUrl || undefined} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-bold">{c.name}</span>
+                  <span className="block text-[10px] text-muted-foreground">{isApp ? "🕹 Mini app" : "📢 Telegram"}</span>
+                </span>
+                <span className={`text-xs font-extrabold ${c.joined ? "text-success" : "text-primary"}`}>{status}</span>
+              </button>
+            );
+          })}
         </div>
         <GoldButton className="mt-4" disabled={isFetching} onClick={() => void verify()}>
           {isFetching ? "🔎 Checking…" : "✅ Verify & Continue"}
@@ -63,13 +97,13 @@ export function JoinGate() {
   );
 }
 
-function ChannelLogo({ id }: { id: string }) {
+function ChannelLogo({ id, src }: { id: string; src?: string | undefined }) {
   const [bad, setBad] = useState(false);
   if (bad)
     return <img src="/tigorix-logo.png" alt="" className="size-10 rounded-full object-cover" />;
   return (
     <img
-      src={`/api/public/chat-photo?c=${encodeURIComponent(id)}`}
+      src={src ?? `/api/public/chat-photo?c=${encodeURIComponent(id)}`}
       alt=""
       onError={() => setBad(true)}
       className="size-10 rounded-full object-cover ring-1 ring-border"
