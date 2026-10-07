@@ -64,6 +64,17 @@
 }
 
 :root {
+  --miner-fur: #eea12f;
+  --miner-stripe: #30251f;
+  --miner-muzzle: #fff0ce;
+  --miner-eye: #121b1a;
+  --miner-helmet: #f4cf48;
+  --miner-metal: #a9c4c7;
+  --miner-handle: #74563d;
+  --miner-ore: #596c70;
+  --miner-crystal: #65ddca;
+  --miner-ground: #33433b;
+  --miner-light: #fff2d5;
   --radius: 0.625rem;
   --background: oklch(0.16 0.012 60);
   --foreground: oklch(0.97 0.01 90);
