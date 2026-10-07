@@ -152,16 +152,28 @@ function AdsView() {
         toast.error(adErrorMessage(r), { description: "Tap Watch Ad again to retry." });
         return;
       }
+      let summary: RewardSummary | null = null;
       const ok = await run(
         () =>
           doRecordAd({
             data: { initData: auth, network: card.net, taps: r.taps ?? 0, watchedMs: r.watchedMs ?? 0 },
           }),
-        (res) =>
-          `🎉 Reward added! +${res?.reward ?? 0} ${APP.tokenName} · 👆 Tapped ${res?.taps ?? 0}${tapOn && res?.share != null && res.share < 1 ? ` (${Math.round(res.share * 100)}% — tap the ad for more)` : " ✅"}`
+        (res) => {
+          summary = {
+            network: card.network,
+            reward: Number(res?.reward ?? 0),
+            taps: Number(res?.taps ?? 0),
+            share: tapOn && res?.share != null ? Number(res.share) : 1,
+          };
+          return `🎉 Reward added! +${res?.reward ?? 0} ${APP.tokenName}`;
+        }
       );
-      if (ok && cfg["adRotation"] !== false)
-        setOrder(rotateToBack(card.net, rawCards.map((c) => c.net)));
+      if (ok) {
+        if (summary) setReward(summary);
+        // Move the card to the back only once its daily views are finished.
+        if (cfg["adRotation"] !== false && card.seen + 1 >= card.cap)
+          setOrder(rotateToBack(card.net, rawCards.map((c) => c.net)));
+      }
     })();
   };
 
