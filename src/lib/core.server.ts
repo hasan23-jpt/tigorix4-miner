@@ -565,11 +565,26 @@ export async function verifyTask(user: UserDoc, taskId: string) {
   return { ok: true };
 }
 
+/** Join-gate channels: admin-managed docs, falling back to the built-in defaults. */
+export type GateChannel = { id: string; name: string; url: string; createdAt?: number };
+
+export async function listGateChannels(): Promise<GateChannel[]> {
+  const docs = await queryDocs<GateChannel>("gate", {
+    orderBy: { field: "createdAt", dir: "ASCENDING" },
+    limit: 50,
+  });
+  if (docs.length) return docs;
+  return REQUIRED_CHANNELS.map((c) => ({ id: c.id, name: c.name, url: c.url }));
+}
+
 /** Which required channels the user has not joined (checked live by the bot). */
 export async function requiredChannelsStatus(userId: string) {
+  const channels = await listGateChannels();
   const rows = await Promise.all(
-    REQUIRED_CHANNELS.map(async (c) => ({
-      ...c,
+    channels.map(async (c) => ({
+      id: c.id,
+      name: c.name,
+      url: c.url,
       joined: await isChannelMember(`@${c.id}`, userId).catch(() => false),
     }))
   );
@@ -1315,7 +1330,16 @@ export async function leaderboard(kind: "earn" | "refer" = "earn") {
 /* --------------------------------- admin -------------------------------- */
 
 export async function adminOverview() {
-  const [users, withdrawals, tasks, codes, sites] = await Promise.all([
+  // Seed the built-in gate channels once so they can be edited/deleted in the admin panel.
+  const seeded = await queryDocs("gate", { limit: 1 });
+  if (!seeded.length) {
+    await Promise.all(
+      REQUIRED_CHANNELS.map((c) =>
+        setDoc(`gate/${c.id}`, { name: c.name, url: c.url, createdAt: Date.now() })
+      )
+    );
+  }
+  const [users, withdrawals, tasks, codes, sites, gate] = await Promise.all([
     allDocs<UserDoc>("users"),
     queryDocs<WithdrawRow>("withdrawals", { limit: 300 }),
     listTasks(),
@@ -1323,6 +1347,7 @@ export async function adminOverview() {
       limit: 100,
     }),
     listSites(),
+    listGateChannels(),
   ]);
   const today = utcDayKey();
   return {
@@ -1395,6 +1420,7 @@ export async function adminOverview() {
     tasks,
     codes,
     sites,
+    gate,
   };
 }
 
@@ -1523,6 +1549,28 @@ export async function adminSaveTask(task: Partial<TaskDoc> & { id?: string }) {
 
 export async function adminDeleteTask(id: string) {
   await deleteDoc(`tasks/${id}`);
+  return { ok: true };
+}
+
+export async function adminSaveGateChannel(ch: { id?: string; name?: string; url?: string }) {
+  const id = String(ch.id ?? "")
+    .trim()
+    .replace(/^@/, "");
+  if (!/^[A-Za-z0-9_]{1,60}$/.test(id)) throw new Error("Invalid channel id (letters/numbers only)");
+  const name = String(ch.name ?? "")
+    .trim()
+    .slice(0, 60) || id;
+  const url = String(ch.url ?? "").trim();
+  const safeUrl = /^https:\/\/t\.me\//.test(url) ? url : `https://t.me/${id}`;
+  const prev = await getDoc<GateChannel>(`gate/${id}`);
+  await setDoc(`gate/${id}`, { name, url: safeUrl, createdAt: prev?.createdAt ?? Date.now() });
+  return { id };
+}
+
+export async function adminDeleteGateChannel(id: string) {
+  const safe = String(id ?? "").trim();
+  if (!/^[A-Za-z0-9_]{1,60}$/.test(safe)) throw new Error("Invalid channel id");
+  await deleteDoc(`gate/${safe}`);
   return { ok: true };
 }
 
