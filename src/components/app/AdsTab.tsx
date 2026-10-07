@@ -344,7 +344,7 @@ function AdBlockCard({
       )}
       <p className="mt-3 text-center text-[11px] text-muted-foreground">
         {network.includes("Interstitial")
-          ? "⏱ Watch at least 15 seconds to earn the reward."
+          ? "👆 Tap the ad to earn the full reward — closing fast pays half."
           : "Optional bonus · watch the full ad to earn."}
       </p>
     </Card>
