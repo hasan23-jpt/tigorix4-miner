@@ -65,9 +65,12 @@ type NetworkCard = {
   seen: number;
 };
 
+type RewardSummary = { network: string; reward: number; taps: number; share: number };
+
 function AdsView() {
   const { state, boot, auth, run, busy } = useAppState();
   const [playing, setPlaying] = useState<AdNet | null>(null);
+  const [reward, setReward] = useState<RewardSummary | null>(null);
   const cfg = boot.cfg as unknown as Record<string, number | string | boolean>;
   const u = state.user as unknown as Record<string, number>;
 
@@ -152,16 +155,28 @@ function AdsView() {
         toast.error(adErrorMessage(r), { description: "Tap Watch Ad again to retry." });
         return;
       }
+      let summary: RewardSummary | null = null;
       const ok = await run(
         () =>
           doRecordAd({
             data: { initData: auth, network: card.net, taps: r.taps ?? 0, watchedMs: r.watchedMs ?? 0 },
           }),
-        (res) =>
-          `🎉 Reward added! +${res?.reward ?? 0} ${APP.tokenName} · 👆 Tapped ${res?.taps ?? 0}${tapOn && res?.share != null && res.share < 1 ? ` (${Math.round(res.share * 100)}% — tap the ad for more)` : " ✅"}`
+        (res) => {
+          summary = {
+            network: card.network,
+            reward: Number(res?.reward ?? 0),
+            taps: Number(res?.taps ?? 0),
+            share: tapOn && res?.share != null ? Number(res.share) : 1,
+          };
+          return `🎉 Reward added! +${res?.reward ?? 0} ${APP.tokenName}`;
+        }
       );
-      if (ok && cfg["adRotation"] !== false)
-        setOrder(rotateToBack(card.net, rawCards.map((c) => c.net)));
+      if (ok) {
+        if (summary) setReward(summary);
+        // Move the card to the back only once its daily views are finished.
+        if (cfg["adRotation"] !== false && card.seen + 1 >= card.cap)
+          setOrder(rotateToBack(card.net, rawCards.map((c) => c.net)));
+      }
     })();
   };
 
@@ -213,6 +228,41 @@ function AdsView() {
         </Card>
       )}
 
+      {reward && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-6 backdrop-blur-sm"
+          onClick={() => setReward(null)}
+        >
+          <div
+            className="surface-card farm-pop w-full max-w-xs p-5 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-4xl">🎉</p>
+            <p className="mt-2 text-lg font-black text-gold-gradient">
+              +{fmt(reward.reward)} {APP.tokenName}
+            </p>
+            <p className="text-[11px] font-bold text-muted-foreground">{reward.network}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+              <div className="rounded-lg border border-border bg-background/40 p-2">
+                <p className="text-muted-foreground">👆 Taps</p>
+                <p className="font-black">{reward.taps}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background/40 p-2">
+                <p className="text-muted-foreground">Reward rate</p>
+                <p className="font-black">{Math.round(reward.share * 100)}%</p>
+              </div>
+            </div>
+            {reward.share < 1 && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Tap the ad while it plays to earn the full reward.
+              </p>
+            )}
+            <div className="mt-4">
+              <GoldButton onClick={() => setReward(null)}>Awesome! 🐯</GoldButton>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -294,7 +344,7 @@ function AdBlockCard({
       )}
       <p className="mt-3 text-center text-[11px] text-muted-foreground">
         {network.includes("Interstitial")
-          ? "⏱ Watch at least 15 seconds to earn the reward."
+          ? "👆 Tap the ad to earn the full reward — closing fast pays half."
           : "Optional bonus · watch the full ad to earn."}
       </p>
     </Card>

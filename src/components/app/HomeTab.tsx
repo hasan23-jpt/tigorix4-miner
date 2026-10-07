@@ -105,8 +105,16 @@ export function HomeTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
         </Guide>
 
         <div className="mb-3 flex items-center gap-3">
-          <div className="grid size-14 place-items-center rounded-full border border-primary/40 bg-background/60">
-            <Pickaxe className={running ? "size-6 animate-bounce text-primary" : "size-6 text-primary"} />
+          <div className="relative grid size-14 place-items-center rounded-full border border-primary/40 bg-background/60">
+            {running ? (
+              <span className="relative text-2xl leading-none">
+                <span className="inline-block animate-wiggle">🐯</span>
+                <span className="absolute -right-2 -top-2 inline-block animate-bounce text-sm">⛏️</span>
+                <span className="absolute -bottom-1 -left-2 animate-float text-[10px]">🪙</span>
+              </span>
+            ) : (
+              <Pickaxe className="size-6 text-primary" />
+            )}
           </div>
           <div className="flex-1">
             <div className="h-2 overflow-hidden rounded-full bg-muted">
