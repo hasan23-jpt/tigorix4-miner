@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
+- Keep the retired Firebase SDK out of dependencies; the server-only data layer replaces it, avoiding unused SDK attack surface.
 - Render the in-panel mining illustration through MiningTiger with the live session running flag — keeps resting and active artwork consistent without extra requests.
 - Data lives in the user's own Supabase project as one `docs(collection,id,data jsonb)` table accessed only by the server via `TIGORIX_DB_SECRET_KEY` (src/lib/fsdb.server.ts) — keeps the old collection/id API and gives browsers zero DB access.
 - All balance changes go through the `ledger_credit` SQL function (balance + transaction in one atomic step) — makes the ledger audit exact and blocks negative balances.
