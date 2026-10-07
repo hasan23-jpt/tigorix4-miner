@@ -99,11 +99,9 @@ export function HomeTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
             {running ? "Mining" : mining.status === "claimable" ? "Ready" : "Idle"}
           </Pill>}
         />
-        <Guide>
-          Start mining to earn {fmt(mining.reward || 100)} {APP.tokenName} per session. Mining runs
-          for 1 hour, then stops automatically — claim your reward to start again. You also get a
-          bot notification when the session finishes.
-        </Guide>
+        <p className="mb-2 text-[11px] text-muted-foreground">
+          ⛏ {fmt(mining.reward || 100)} {APP.tokenName} / session · 🔔 bot alert when done
+        </p>
 
         <MiningTiger running={running} />
         <div className="mb-3">

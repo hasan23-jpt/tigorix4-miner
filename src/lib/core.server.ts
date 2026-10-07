@@ -1493,7 +1493,7 @@ export async function decideWithdraw(
     `✅ <b>Status:</b> SUCCESS\n` +
     `━━━━━━━━━━━━━━━━━━\n` +
     `💎 Real users. Real payouts. Start earning now! 🚀`;
-  const posted = await sendMessage(APP.paymentChatId, post, [
+  const posted = await sendPhoto(APP.paymentChatId, `${origin}/payment-banner.jpg`, post, [
     [{ text: "🔎 View Transaction", url: txUrl }],
     [btn.miniApp],
   ]);
@@ -1502,7 +1502,6 @@ export async function decideWithdraw(
       `⚠️ <b>Payment channel post failed</b>\n\nWithdrawal #${w.number} for ${w.name} was approved, but the bot could not post to <code>${APP.paymentChatId}</code>.\n\n✅ Fix: add @${APP.botUsername} to the payment channel as an <b>admin with post permission</b>, then approve again or re-post manually.`
     );
   }
-  void origin;
   return { ok: true, channelPosted: !!posted };
 }
 
