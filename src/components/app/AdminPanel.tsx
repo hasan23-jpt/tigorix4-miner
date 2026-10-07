@@ -190,6 +190,107 @@ function BackBtn({ onClick }: { onClick: () => void }) {
   );
 }
 
+/** Join-gate channels every user must join: view, add, edit and remove. */
+function GateAdmin({
+  admin,
+  channels,
+  onDone,
+}: {
+  admin: AdminAuth;
+  channels: { id: string; name: string; url: string }[];
+  onDone: () => void;
+}) {
+  const { run, busy } = useAppState();
+  const [form, setForm] = useState({ id: "", name: "", url: "" });
+  return (
+    <div className="space-y-4">
+      <Card>
+        <SectionTitle
+          icon={form.id ? "✏️" : "🚪"}
+          title={form.id ? "Edit Gate Channel" : "Add Gate Channel"}
+          action={form.id ? <Pill tone="info">editing</Pill> : undefined}
+        />
+        <Guide>
+          Everyone must join these channels before using the app. Add, edit or remove them here.
+        </Guide>
+        <div className="space-y-2">
+          <Field
+            label="Channel id (without @, e.g. Tigorix)"
+            value={form.id}
+            onChange={(e) => setForm({ ...form, id: e.target.value.trim().replace(/^@/, "") })}
+          />
+          <Field
+            label="Display name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+          <Field
+            label="URL (https://t.me/…)"
+            value={form.url}
+            onChange={(e) => setForm({ ...form, url: e.target.value.trim() })}
+          />
+          <GoldButton
+            disabled={busy || !form.id}
+            onClick={() =>
+              void run(
+                () =>
+                  adminGateSave({
+                    data: { ...admin, id: form.id, name: form.name, url: form.url },
+                  }),
+                () => "✅ Gate channel saved"
+              ).then(() => {
+                setForm({ id: "", name: "", url: "" });
+                onDone();
+              })
+            }
+          >
+            {form.id ? "💾 Update Channel" : "💾 Save Channel"}
+          </GoldButton>
+          {form.id && (
+            <GhostButton onClick={() => setForm({ id: "", name: "", url: "" })}>
+              ✖ Cancel edit
+            </GhostButton>
+          )}
+        </div>
+      </Card>
+      <Card>
+        <SectionTitle
+          icon="📋"
+          title="Current Gate Channels"
+          action={<Pill>{channels.length}</Pill>}
+        />
+        <div className="space-y-2">
+          {channels.map((c) => (
+            <div key={c.id} className="rounded-xl border border-border bg-background/40 p-3 text-xs">
+              <p className="font-bold">{c.name}</p>
+              <p className="truncate text-[10px] text-muted-foreground">
+                @{c.id} · {c.url}
+              </p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <GhostButton
+                  onClick={() => setForm({ id: c.id, name: c.name, url: c.url })}
+                >
+                  ✏️ Edit
+                </GhostButton>
+                <GhostButton
+                  onClick={() =>
+                    void run(
+                      () => adminGateDelete({ data: { ...admin, id: c.id } }),
+                      () => "🗑 Channel removed"
+                    ).then(onDone)
+                  }
+                >
+                  🗑 Delete
+                </GhostButton>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 function BroadcastForm({ admin }: { admin: AdminAuth }) {
   const { run, busy } = useAppState();
   const [text, setText] = useState("");
