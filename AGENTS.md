@@ -17,3 +17,5 @@
 - Schema changes are shipped as `supabase/schema.sql` for the user to paste into their SQL editor — the project is not linked to Lovable's Supabase connector.
 - Collection reads page through the database 1000 rows at a time (`queryDocs`/`allDocs` in fsdb.server.ts) — the database caps each request at 1000 rows.
 - Broadcasts are sent in 100-user chunks driven by the admin panel (`offset` → `next`) — keeps each server call short and under Telegram's 30 msg/sec limit.
+- Extra join-popup items live in `cfg.gateTasks`; mini-app items verify server-side 5s after a recorded open (`gateOpens`/`gateDone` docs) — same anti-skip rule as tasks.
+- Mining-finished messages come from the `/api/public/cron/mining` Vercel cron — users get notified without opening the app.

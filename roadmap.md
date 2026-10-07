@@ -18,3 +18,7 @@
 - [x] /start bot message fix
 - [x] Move payment proof from Watch tab to bottom of Home
 - [x] Advanced redesign: more animations, richer colors, round logo in loading screen
+- [x] Mining sound + header sound on/off
+- [x] Admin-managed join-popup tasks (Telegram channels + mini apps with logo, 5s verify)
+- [x] Payment banner attached to withdrawal-approved channel post
+- [x] Auto "mining finished" bot message via 5-minute cron (needs CRON_SECRET in Vercel; Vercel Pro for 5-min crons)
