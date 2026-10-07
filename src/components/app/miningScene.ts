@@ -86,10 +86,11 @@ export function createMiningScene(host: HTMLElement, isRunning: () => boolean) {
   });
   sphere(head, "eye", 0, -.09, .462, .085, .06, .04);
   const eyes: THREE.Mesh[] = [];
+  const eyeDetails: THREE.Mesh[] = [];
   [-1, 1].forEach(side => {
-    sphere(head, "muzzle", side * .18, .07, .354, .11, .13, .055);
+    eyeDetails.push(sphere(head, "muzzle", side * .18, .07, .354, .11, .13, .055));
     eyes.push(sphere(head, "eye", side * .18, .08, .402, .055, .08, .024));
-    sphere(head, "light", side * .17, .11, .423, .016);
+    eyeDetails.push(sphere(head, "light", side * .17, .11, .423, .016));
   });
   const helmet = sphere(head, "helmet", 0, .3, -.015, .47, .22, .4);
   mesh(head, new THREE.CylinderGeometry(.5, .5, .045, 32), "helmet", 0, .22, .01, 1, 1, .88);
@@ -199,11 +200,13 @@ export function createMiningScene(host: HTMLElement, isRunning: () => boolean) {
       head.position.y = .92;
       tiger.scale.y = reducedMotion.matches ? 1 : 1 + Math.sin(time * 2) * .012 * (1 - active);
       legs.forEach((leg, i) => { leg.rotation.z = (1 - active) * (i ? -1.05 : .9); leg.position.y = THREE.MathUtils.lerp(.23, .66, active); });
-      arms.forEach((arm, i) => { arm.rotation.z = THREE.MathUtils.lerp(-.9, .05 + swing * 1.85, active); arm.rotation.y = i ? 0 : -.35 * active; });
+      arms.forEach((arm, i) => { arm.rotation.z = THREE.MathUtils.lerp(.7, -1.1 + swing * 2.3, active); arm.rotation.y = i ? 0 : -.35 * active; });
       tool.visible = active > .35;
       helmet.visible = true;
       eyes.forEach(eye => { eye.scale.y = THREE.MathUtils.lerp(.012, .08, active); });
+      eyeDetails.forEach(detail => { detail.visible = active > .6; });
       tail.rotation.y = reducedMotion.matches ? 0 : Math.sin(time * 1.8) * .12 * active;
+      tail.rotation.z = -1.3 * (1 - active);
       const burst = phase >= .68 && phase < .95 && active > .8 && !reducedMotion.matches;
       const p = (phase - .68) / .27;
       chips.forEach((chip, i) => {
