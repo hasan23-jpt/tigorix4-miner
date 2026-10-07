@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PayoutsRouteImport } from './routes/payouts'
 import { Route as ApiPublicChatPhotoRouteImport } from './routes/api/public/chat-photo'
+import { Route as ApiPublicCronMiningRouteImport } from './routes/api/public/cron/mining'
 import { Route as ApiPublicCronRemindersRouteImport } from './routes/api/public/cron/reminders'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 
@@ -30,6 +31,11 @@ const ApiPublicChatPhotoRoute = ApiPublicChatPhotoRouteImport.update({
   path: '/api/public/chat-photo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronMiningRoute = ApiPublicCronMiningRouteImport.update({
+  id: '/api/public/cron/mining',
+  path: '/api/public/cron/mining',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronRemindersRoute = ApiPublicCronRemindersRouteImport.update({
   id: '/api/public/cron/reminders',
   path: '/api/public/cron/reminders',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/payouts': typeof PayoutsRoute
   '/api/public/chat-photo': typeof ApiPublicChatPhotoRoute
+  '/api/public/cron/mining': typeof ApiPublicCronMiningRoute
   '/api/public/cron/reminders': typeof ApiPublicCronRemindersRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/payouts': typeof PayoutsRoute
   '/api/public/chat-photo': typeof ApiPublicChatPhotoRoute
+  '/api/public/cron/mining': typeof ApiPublicCronMiningRoute
   '/api/public/cron/reminders': typeof ApiPublicCronRemindersRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -61,6 +69,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/payouts': typeof PayoutsRoute
   '/api/public/chat-photo': typeof ApiPublicChatPhotoRoute
+  '/api/public/cron/mining': typeof ApiPublicCronMiningRoute
   '/api/public/cron/reminders': typeof ApiPublicCronRemindersRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
@@ -70,6 +79,7 @@ export interface FileRouteTypes {
     | '/'
     | '/payouts'
     | '/api/public/chat-photo'
+    | '/api/public/cron/mining'
     | '/api/public/cron/reminders'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -77,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/payouts'
     | '/api/public/chat-photo'
+    | '/api/public/cron/mining'
     | '/api/public/cron/reminders'
     | '/api/public/telegram/webhook'
   id:
@@ -84,6 +95,7 @@ export interface FileRouteTypes {
     | '/'
     | '/payouts'
     | '/api/public/chat-photo'
+    | '/api/public/cron/mining'
     | '/api/public/cron/reminders'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
@@ -92,6 +104,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PayoutsRoute: typeof PayoutsRoute
   ApiPublicChatPhotoRoute: typeof ApiPublicChatPhotoRoute
+  ApiPublicCronMiningRoute: typeof ApiPublicCronMiningRoute
   ApiPublicCronRemindersRoute: typeof ApiPublicCronRemindersRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
@@ -119,6 +132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicChatPhotoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/mining': {
+      id: '/api/public/cron/mining'
+      path: '/api/public/cron/mining'
+      fullPath: '/api/public/cron/mining'
+      preLoaderRoute: typeof ApiPublicCronMiningRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/reminders': {
       id: '/api/public/cron/reminders'
       path: '/api/public/cron/reminders'
@@ -140,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PayoutsRoute: PayoutsRoute,
   ApiPublicChatPhotoRoute: ApiPublicChatPhotoRoute,
+  ApiPublicCronMiningRoute: ApiPublicCronMiningRoute,
   ApiPublicCronRemindersRoute: ApiPublicCronRemindersRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
