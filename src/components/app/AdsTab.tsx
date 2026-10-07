@@ -65,9 +65,12 @@ type NetworkCard = {
   seen: number;
 };
 
+type RewardSummary = { network: string; reward: number; taps: number; share: number };
+
 function AdsView() {
   const { state, boot, auth, run, busy } = useAppState();
   const [playing, setPlaying] = useState<AdNet | null>(null);
+  const [reward, setReward] = useState<RewardSummary | null>(null);
   const cfg = boot.cfg as unknown as Record<string, number | string | boolean>;
   const u = state.user as unknown as Record<string, number>;
 
@@ -225,6 +228,41 @@ function AdsView() {
         </Card>
       )}
 
+      {reward && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-6 backdrop-blur-sm"
+          onClick={() => setReward(null)}
+        >
+          <div
+            className="surface-card farm-pop w-full max-w-xs p-5 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-4xl">🎉</p>
+            <p className="mt-2 text-lg font-black text-gold-gradient">
+              +{fmt(reward.reward)} {APP.tokenName}
+            </p>
+            <p className="text-[11px] font-bold text-muted-foreground">{reward.network}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+              <div className="rounded-lg border border-border bg-background/40 p-2">
+                <p className="text-muted-foreground">👆 Taps</p>
+                <p className="font-black">{reward.taps}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background/40 p-2">
+                <p className="text-muted-foreground">Reward rate</p>
+                <p className="font-black">{Math.round(reward.share * 100)}%</p>
+              </div>
+            </div>
+            {reward.share < 1 && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Tap the ad while it plays to earn the full reward.
+              </p>
+            )}
+            <div className="mt-4">
+              <GoldButton onClick={() => setReward(null)}>Awesome! 🐯</GoldButton>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
