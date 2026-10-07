@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Replace shaking tiger photo with articulated 3D mining and sleeping states; verify rendering.
 - [x] Restore Adsgram playback and enforce a 10-second watch
 - [x] Remove the pre-ad confirmation checkbox from Ads
 - [x] Fix the Telegram /start bot response
