@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Gift, Pickaxe, ShieldCheck, Ticket, Users, Wallet } from "lucide-react";
+import { Gift, ShieldCheck, Ticket, Users, Wallet } from "lucide-react";
 import { APP, DAILY_REWARDS, fmt } from "@/lib/config";
 import { openLink, haptic } from "@/lib/telegram";
 import {
@@ -12,6 +12,7 @@ import { useAppState } from "./useApp";
 import { useAdGate } from "./useAdGate";
 import { PayoutProofsCard } from "./PayoutProofs";
 import { QuickTasks } from "./QuickTasks";
+import { MiningTiger } from "./MiningTiger";
 import { Card, Field, GhostButton, GoldButton, Guide, Pill, SectionTitle } from "./ui";
 
 function countdown(ms: number) {
@@ -104,19 +105,9 @@ export function HomeTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
           bot notification when the session finishes.
         </Guide>
 
-        <div className="mb-3 flex items-center gap-3">
-          <div className="relative grid size-14 place-items-center rounded-full border border-primary/40 bg-background/60">
-            {running ? (
-              <span className="relative text-2xl leading-none">
-                <span className="inline-block animate-wiggle">🐯</span>
-                <span className="absolute -right-2 -top-2 inline-block animate-bounce text-sm">⛏️</span>
-                <span className="absolute -bottom-1 -left-2 animate-float text-[10px]">🪙</span>
-              </span>
-            ) : (
-              <Pickaxe className="size-6 text-primary" />
-            )}
-          </div>
-          <div className="flex-1">
+        <MiningTiger running={running} />
+        <div className="mb-3">
+          <div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
                 className="bg-gold-gradient h-full transition-all"
