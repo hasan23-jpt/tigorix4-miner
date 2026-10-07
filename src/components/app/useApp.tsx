@@ -63,7 +63,8 @@ export function AppProvider({
         try {
           const res = await fn();
           if (success) toast.success(success(res));
-          await qc.invalidateQueries();
+          // Refresh only active (on-screen) queries after an action, not every cached one.
+          await qc.invalidateQueries({ refetchType: "active" });
           return res;
         } catch (e) {
           toast.error(e instanceof Error ? e.message : "Something went wrong");

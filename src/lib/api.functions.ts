@@ -518,7 +518,14 @@ export const adminRepairBalance = createServerFn({ method: "POST" })
 /* ---------------------------- public payout proof ---------------------------- */
 
 /** Unauthenticated: powers the public /payouts proof page and the in-app card. */
-export const getPayoutProofs = createServerFn({ method: "GET" }).handler(async () => payoutProofs());
+// Public, identical for every user: cache per server instance for 5 minutes.
+let proofsCache: { at: number; data: Awaited<ReturnType<typeof payoutProofs>> } | null = null;
+export const getPayoutProofs = createServerFn({ method: "GET" }).handler(async () => {
+  if (proofsCache && Date.now() - proofsCache.at < 300_000) return proofsCache.data;
+  const data = await payoutProofs();
+  proofsCache = { at: Date.now(), data };
+  return data;
+});
 
 export const adminSiteSave = createServerFn({ method: "POST" })
   .inputValidator(
