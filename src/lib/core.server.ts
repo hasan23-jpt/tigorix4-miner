@@ -1552,6 +1552,28 @@ export async function adminDeleteTask(id: string) {
   return { ok: true };
 }
 
+export async function adminSaveGateChannel(ch: { id?: string; name?: string; url?: string }) {
+  const id = String(ch.id ?? "")
+    .trim()
+    .replace(/^@/, "");
+  if (!/^[A-Za-z0-9_]{1,60}$/.test(id)) throw new Error("Invalid channel id (letters/numbers only)");
+  const name = String(ch.name ?? "")
+    .trim()
+    .slice(0, 60) || id;
+  const url = String(ch.url ?? "").trim();
+  const safeUrl = /^https:\/\/t\.me\//.test(url) ? url : `https://t.me/${id}`;
+  const prev = await getDoc<GateChannel>(`gate/${id}`);
+  await setDoc(`gate/${id}`, { name, url: safeUrl, createdAt: prev?.createdAt ?? Date.now() });
+  return { id };
+}
+
+export async function adminDeleteGateChannel(id: string) {
+  const safe = String(id ?? "").trim();
+  if (!/^[A-Za-z0-9_]{1,60}$/.test(safe)) throw new Error("Invalid channel id");
+  await deleteDoc(`gate/${safe}`);
+  return { ok: true };
+}
+
 export async function adminSaveCode(code: string, reward: number, maxUses: number, active: boolean) {
   const c = code.trim().toUpperCase();
   if (!c) throw new Error("Code required");

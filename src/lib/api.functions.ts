@@ -31,6 +31,8 @@ import {
   adminSetUser,
   adminSaveTask,
   adminDeleteTask,
+  adminSaveGateChannel,
+  adminDeleteGateChannel,
   adminSaveCode,
   adminDeleteCode,
   adminBroadcast,
