@@ -136,7 +136,7 @@ export function createMiningScene(host: HTMLElement, isRunning: () => boolean) {
   mesh(tool, new THREE.TubeGeometry(blade, 16, .07, 8, false), "metal", 0, 0, 0);
 
   const ore = new THREE.Group();
-  ore.position.set(1.03, .4, .12);
+  ore.position.set(.82, .4, .12);
   scene.add(ore);
   const boulder = mesh(ore, new THREE.DodecahedronGeometry(.65, 0), "ore", 0, 0, 0, 1, .9, .85);
   boulder.rotation.set(.2, .5, .1);
