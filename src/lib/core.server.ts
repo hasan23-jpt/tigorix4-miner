@@ -1347,6 +1347,7 @@ export async function adminOverview() {
       limit: 100,
     }),
     listSites(),
+    listGateChannels(),
   ]);
   const today = utcDayKey();
   return {
@@ -1419,6 +1420,7 @@ export async function adminOverview() {
     tasks,
     codes,
     sites,
+    gate,
   };
 }
 
