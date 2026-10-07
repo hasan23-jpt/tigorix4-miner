@@ -10,7 +10,7 @@ export function PayoutProofsCard() {
   const { data: proofs } = useQuery({
     queryKey: ["payout-proofs"],
     queryFn: () => getPayoutProofs(),
-    refetchInterval: 60000,
+    staleTime: 300000,
   });
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   return (
