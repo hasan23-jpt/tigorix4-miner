@@ -825,7 +825,7 @@ function SettingsAdmin({
         <div className="mt-2">
           <Field
             label="Welcome / broadcast banner image URL"
-            placeholder="https://…/tigorix-banner.png"
+            placeholder="https://…/tigorix-banner.jpg"
             value={banner}
             onChange={(e) => setBanner(e.target.value)}
           />

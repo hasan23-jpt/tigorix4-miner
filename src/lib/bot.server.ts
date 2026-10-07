@@ -88,7 +88,7 @@ export const btn = {
 };
 
 export function bannerUrl(origin: string) {
-  return `${origin}/tigorix-banner.png`;
+  return `${origin}/tigorix-banner.jpg`;
 }
 
 export async function sendMessage(
