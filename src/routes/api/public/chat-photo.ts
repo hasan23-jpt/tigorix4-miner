@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/public/chat-photo")({
         const p = await chatPhoto(`@${c}`).catch(() => null);
         if (!p) return new Response("Not found", { status: 404 });
         return new Response(p.body, {
-          headers: { "Content-Type": p.type, "Cache-Control": "public, max-age=86400" },
+          headers: { "Content-Type": p.type, "Cache-Control": "public, max-age=604800, s-maxage=604800" },
         });
       },
     },
