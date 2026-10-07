@@ -12,6 +12,10 @@ import {
   claimTask,
   verifyTask,
   requiredChannelsStatus,
+  gateOpen,
+  gateVerify,
+  adminSaveGate,
+  type GateTask,
   recordWithdrawAd,
   withdrawAdsWatched,
   openTask,
@@ -611,4 +615,27 @@ export const adminPartnerSend = createServerFn({ method: "POST" })
       texts,
       photo: String(data.photo ?? "").slice(0, 500),
     });
+  });
+
+/* ------------------------------ join gate tasks ----------------------------- */
+
+export const doGateOpen = createServerFn({ method: "POST" })
+  .inputValidator((d: Auth & { id: string }) => d)
+  .handler(async ({ data }) => {
+    const { user } = await session(data.initData);
+    return gateOpen(user.id, str(data.id, 40));
+  });
+
+export const doGateVerify = createServerFn({ method: "POST" })
+  .inputValidator((d: Auth & { id: string }) => d)
+  .handler(async ({ data }) => {
+    const { user } = await session(data.initData);
+    return gateVerify(user.id, str(data.id, 40));
+  });
+
+export const adminGateSave = createServerFn({ method: "POST" })
+  .inputValidator((d: AdminAuth & { list: GateTask[] }) => d)
+  .handler(async ({ data }) => {
+    await adminSession(data.initData, data.password);
+    return adminSaveGate(Array.isArray(data.list) ? data.list : []);
   });
