@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Refresh vulnerable dependency resolutions and verify a clean dependency scan and app build
+- [x] Refresh vulnerable dependency resolutions and verify a clean dependency scan and app build
 - [x] Restore Adsgram playback and enforce a 10-second watch
 - [x] Remove the pre-ad confirmation checkbox from Ads
 - [x] Fix the Telegram /start bot response
