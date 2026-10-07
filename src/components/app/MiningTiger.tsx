@@ -1,27 +1,28 @@
-import tiger from "@/assets/tiger-miner.png";
+import { useEffect, useRef, useState } from "react";
 
 export function MiningTiger({ running }: { running: boolean }) {
+  const host = useRef<HTMLDivElement>(null);
+  const active = useRef(running);
+  active.current = running;
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    let dispose: (() => void) | undefined;
+    void import("./miningScene").then(({ createMiningScene }) => {
+      if (cancelled || !host.current) return;
+      try {
+        dispose = createMiningScene(host.current, () => active.current);
+      } catch {
+        setFailed(true);
+      }
+    }).catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; dispose?.(); };
+  }, []);
   return (
-    <div className="relative mb-3 grid h-40 place-items-center overflow-hidden rounded-2xl border border-primary/30 bg-background/60">
-      <img
-        src={tiger}
-        alt={running ? "Tiger mining" : "Tiger sleeping"}
-        className={`h-36 w-auto select-none ${running ? "tg-mine" : "tg-sleep"}`}
-        draggable={false}
-      />
-      {running ? (
-        <>
-          <span className="tg-chip absolute bottom-6 left-[58%] text-lg">✨</span>
-          <span className="tg-chip absolute bottom-8 left-[64%] text-sm [animation-delay:.3s]">🪨</span>
-          <span className="tg-chip absolute bottom-5 left-[54%] text-sm [animation-delay:.55s]">💎</span>
-        </>
-      ) : (
-        <>
-          <span className="tg-z absolute right-[28%] top-6 text-sm font-bold text-primary">z</span>
-          <span className="tg-z absolute right-[24%] top-4 text-base font-bold text-primary [animation-delay:.7s]">Z</span>
-          <span className="tg-z absolute right-[20%] top-2 text-lg font-bold text-primary [animation-delay:1.4s]">Z</span>
-        </>
-      )}
+    <div className="relative -mx-3 mb-2 h-56 overflow-hidden" role="img" aria-label={running ? "3D tiger striking ore with a pickaxe" : "3D tiger lying down asleep"}>
+      <div ref={host} className="h-full w-full touch-pan-y" />
+      {!running && !failed && <span className="pointer-events-none absolute left-[30%] top-8 text-sm font-bold text-primary motion-safe:animate-pulse">z Z</span>}
+      {failed && <p className="absolute inset-0 grid place-items-center text-xs text-muted-foreground">3D view unavailable on this device</p>}
     </div>
   );
 }
