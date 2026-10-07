@@ -219,7 +219,7 @@ export function createMiningScene(host: HTMLElement, isRunning: () => boolean) {
       camera.position.set(7 * Math.sin(.52 + angle), 3.2, 7 * Math.cos(.52 + angle));
       camera.lookAt(0, 1.03, 0);
       renderer.render(scene, camera);
-      host.dataset.pose = active > .5 ? "mining" : "sleeping";
+      host.dataset["pose"] = active > .5 ? "mining" : "sleeping";
     }
     frame = requestAnimationFrame(render);
   }
