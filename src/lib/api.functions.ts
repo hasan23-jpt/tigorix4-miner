@@ -456,6 +456,20 @@ export const adminTaskDelete = createServerFn({ method: "POST" })
     return adminDeleteTask(data.id);
   });
 
+export const adminGateSave = createServerFn({ method: "POST" })
+  .inputValidator((d: AdminAuth & { id?: string; name?: string; url?: string }) => d)
+  .handler(async ({ data }) => {
+    await adminSession(data.initData, data.password);
+    return adminSaveGateChannel(data);
+  });
+
+export const adminGateDelete = createServerFn({ method: "POST" })
+  .inputValidator((d: AdminAuth & { id: string }) => d)
+  .handler(async ({ data }) => {
+    await adminSession(data.initData, data.password);
+    return adminDeleteGateChannel(data.id);
+  });
+
 export const adminCodeSave = createServerFn({ method: "POST" })
   .inputValidator(
     (d: AdminAuth & { code: string; reward: number; maxUses: number; active: boolean }) => d

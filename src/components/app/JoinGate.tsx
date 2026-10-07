@@ -35,7 +35,7 @@ export function JoinGate() {
         <img src="/tigorix-logo.png" alt="Tigorix" className="mx-auto size-16 rounded-full ring-2 ring-primary" />
         <h2 className="mt-3 text-center text-lg font-extrabold">📢 Join our channels</h2>
         <p className="mt-1 text-center text-xs text-muted-foreground">
-          Stay joined to all 4 channels to use Tigorix.
+          Stay joined to all {data.channels.length} channels to use Tigorix.
         </p>
         <div className="mt-4 space-y-2">
           {data.channels.map((c) => (
