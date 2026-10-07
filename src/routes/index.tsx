@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Home, ListChecks, PlayCircle, User, Users } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { APP, fmt } from "@/lib/config";
+import { setSound, soundOn } from "@/lib/sound";
 import { AppProvider, useAppState, useBootstrap } from "@/components/app/useApp";
 import { LoadingScreen } from "@/components/app/Loading";
 import { HomeTab } from "@/components/app/HomeTab";
@@ -146,7 +147,8 @@ function Shell() {
             {state.user.id}
           </p>
         </div>
-        <div className="ml-auto text-right">
+        <SoundToggle />
+        <div className="text-right">
           <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{t("balance")}</p>
           <p className="text-sm font-black">
             <span className="text-gold-gradient">{fmt(state.user.balance)}</span>{" "}
@@ -194,5 +196,22 @@ function Shell() {
         </nav>
       )}
     </div>
+  );
+}
+
+function SoundToggle() {
+  const [on, setOn] = useState(true);
+  useEffect(() => setOn(soundOn()), []);
+  return (
+    <button
+      aria-label={on ? "Turn sound off" : "Turn sound on"}
+      onClick={() => {
+        setSound(!on);
+        setOn(!on);
+      }}
+      className="ml-auto grid size-9 place-items-center rounded-full border border-border bg-background/60 text-base active:scale-90"
+    >
+      {on ? "🔊" : "🔇"}
+    </button>
   );
 }

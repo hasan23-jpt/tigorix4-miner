@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+import { playClink } from "@/lib/sound";
 
 export function MiningTiger({ running }: { running: boolean }) {
   const host = useRef<HTMLDivElement>(null);
   const active = useRef(running);
   active.current = running;
   const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(playClink, 1600); // one clink per pickaxe strike
+    return () => clearInterval(id);
+  }, [running]);
   useEffect(() => {
     let cancelled = false;
     let dispose: (() => void) | undefined;
