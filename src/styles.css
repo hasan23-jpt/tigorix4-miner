@@ -342,3 +342,13 @@
 @media (prefers-reduced-motion: reduce) {
   .farm-scene * { animation: none !important; }
 }
+
+/* Tiger mining: pickaxe swings down onto the rock, body leans, chips fly. */
+@keyframes miner-swing { 0%,100% { transform: rotate(-70deg); } 45% { transform: rotate(-70deg); } 60% { transform: rotate(25deg); } 70% { transform: rotate(15deg); } }
+@keyframes miner-lean { 0%,45%,100% { transform: translateX(0) rotate(-4deg); } 60% { transform: translateX(6px) rotate(6deg); } }
+@keyframes miner-chip { 0%,58% { opacity: 0; transform: translate(0,0) scale(.6); } 65% { opacity: 1; } 100% { opacity: 0; transform: translate(14px,-34px) scale(1.1); } }
+.miner-pick { transform-origin: 20% 85%; animation: miner-swing 1.1s ease-in infinite; }
+.miner-body { animation: miner-lean 1.1s ease-in infinite; }
+.miner-chip { opacity: 0; animation: miner-chip 1.1s ease-out infinite; }
+.miner-chip-2 { animation-delay: .05s; --dx: -1; }
+@media (prefers-reduced-motion: reduce) { .miner-pick, .miner-body, .miner-chip { animation: none; } }

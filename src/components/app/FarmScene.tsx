@@ -18,9 +18,14 @@ export function FarmScene() {
       <div className="farm-hill farm-hill-back absolute inset-x-[-20%] bottom-24 h-56 rounded-[50%]" />
       <div className="farm-hill farm-hill-front absolute inset-x-[-10%] bottom-[-40px] h-56 rounded-[50%]" />
       <div className="farm-rows absolute inset-x-0 bottom-0 h-40" />
-      <div className="farm-walker absolute bottom-28 text-4xl">
-        <span className="inline-block animate-[tg-wiggle_1.2s_ease-in-out_infinite]">🐯</span>
-        <span className="text-2xl">⛏️</span>
+      <div className="absolute bottom-24 left-1/2 flex -translate-x-1/2 items-end">
+        <span className="miner-body inline-block text-5xl">🐯</span>
+        <span className="miner-pick -ml-3 mb-6 inline-block text-4xl">⛏️</span>
+        <span className="relative -ml-2 inline-block text-5xl">
+          🪨
+          <span className="miner-chip absolute -top-2 left-1 text-sm">✨</span>
+          <span className="miner-chip miner-chip-2 absolute -top-1 left-6 text-sm">🪙</span>
+        </span>
       </div>
       <span className="absolute bottom-32 left-6 text-3xl">🌾</span>
       <span className="absolute bottom-36 right-10 text-3xl">🌽</span>
