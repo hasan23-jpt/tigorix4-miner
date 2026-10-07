@@ -352,3 +352,6 @@
 .miner-chip { opacity: 0; animation: miner-chip 1.1s ease-out infinite; }
 .miner-chip-2 { animation-delay: .05s; --dx: -1; }
 @media (prefers-reduced-motion: reduce) { .miner-pick, .miner-body, .miner-chip { animation: none; } }
+/* Swing only while a mining session is running; resting pose otherwise. */
+.farm-scene.is-idle .miner-pick, .farm-scene.is-idle .miner-body, .farm-scene.is-idle .miner-chip { animation: none; }
+.farm-scene.is-idle .miner-pick { transform: rotate(10deg); }
